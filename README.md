@@ -4,6 +4,38 @@ GOB Management API provides a graphql endpoint on process logs.
 
 The endpoint is provided under /graphql
 
+The logs can be queried using the following examples:
+
+```
+{
+  logs {
+    edges {
+      node {
+        processId
+        timestamp
+        msg
+      }
+    }
+  }
+}
+```
+
+To filter the logs on a single process_id use the following example (replace PROCESSID with an actual value):
+
+```
+{
+  logs(processId: "PROCESSID") {
+    edges {
+      node {
+        processId
+        timestamp
+        msg
+      }
+    }
+  }
+}
+```
+
 # Requirements
 
     * docker-compose >= 1.17
