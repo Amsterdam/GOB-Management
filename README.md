@@ -20,7 +20,8 @@ The logs can be queried using the following examples:
 }
 ```
 
-To filter the logs on a single process_id use the following example (replace PROCESSID with an actual value):
+To filter the logs on a single process_id use the following example
+(replace PROCESSID with an actual value):
 
 ```
 {
@@ -32,6 +33,32 @@ To filter the logs on a single process_id use the following example (replace PRO
         msg
       }
     }
+  }
+}
+```
+
+To filter the logs on a source-entity combination use the following example:
+
+```
+{
+  logs(source: "Grondslag" entity: "meetbouten") {
+    edges {
+      node {
+        processId
+        timestamp
+        msg
+      }
+    }
+  }
+}
+```
+
+To get a list of all possible source-entity combinations use:
+```
+{
+  sourceEntities {
+    source
+    entity
   }
 }
 ```
