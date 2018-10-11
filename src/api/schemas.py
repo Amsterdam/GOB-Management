@@ -3,22 +3,23 @@ import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
 from api.database.models import Log
+from api.database.base import db_session
 from api.fields import FilterConnectionField
 
 # Create a generic class to mutualize description of people attributes for both queries and mutations
 class LogAttribute:
-    logid = graphene.Int(description="Name of the person.")
-    timestamp = graphene.DateTime(description="Height of the person.")
-    process_id = graphene.String(description="Mass of the person.")
-    source = graphene.String(description="Hair color of the person.")
-    entity = graphene.String(description="Skin color of the person.")
-    level = graphene.String(description="Eye color of the person.")
-    name = graphene.String(description="Birth year of the person.")
-    msg = graphene.String(description="Gender of the person.")
-    data = graphene.JSONString(description="Global Id of the planet from which the person comes from.")
+    logid = graphene.Int(description="Unique identification of the log entry")
+    timestamp = graphene.DateTime(description="Local timestamp of when the log entry was created")
+    process_id = graphene.String(description="The id of the process to which this log entry belongs")
+    source = graphene.String(description="The source for the process")
+    entity = graphene.String(description="The entity that is handled by the process")
+    level = graphene.String(description="The log level (CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET)")
+    name = graphene.String(description="The name of the process step that generated the log entry")
+    msg = graphene.String(description="A (short) description of the log entry")
+    data = graphene.JSONString(description="Associated data in JSON format for the log entry")
 
 
-class LogType(SQLAlchemyObjectType):
+class LogType(SQLAlchemyObjectType, LogAttribute):
     """Log node."""
 
     class Meta:
@@ -31,10 +32,31 @@ class LogConnection(graphene.relay.Connection):
         node = LogType
 
 
+class SourceEntity(graphene.ObjectType):
+
+    source = graphene.String(description="The source for the process")
+    entity = graphene.String(description="The entity that is handled by the process")
+
+    def __init__(self, source, entity):
+        self.source = source
+        self.entity = entity
+
+    class Meta:
+        interfaces = (graphene.relay.Node,)
+
+
 class Query(graphene.ObjectType):
     """Query objects for GraphQL API."""
-
     node = graphene.relay.Node.Field()
-    logs = FilterConnectionField(LogConnection, process_id=graphene.String())
+    logs = FilterConnectionField(LogConnection,
+                                 process_id=graphene.String(),
+                                 source=graphene.String(),
+                                 entity=graphene.String())
+    source_entities = graphene.List(SourceEntity)
+
+    def resolve_source_entities(self, _):
+        results = db_session.query(Log).distinct(Log.source, Log.entity).all()
+        return [SourceEntity(result.source, result.entity) for result in results]
+
 
 schema = graphene.Schema(query=Query)
