@@ -12,14 +12,14 @@ def _health():
 _graphql = GraphQLView.as_view(
                 'graphql',
                 schema=schema,
-                graphiql=True # for having the GraphiQL interface
+                graphiql=True  # for having the GraphiQL interface
             )
 
 # Routes
 ROUTES = [
     # Health check URL
     ('/status/health/', _health),
-    ('/graphql', _graphql)
+    ('/gob_management/graphql/', _graphql)
 ]
 
 for route, view_func in ROUTES:

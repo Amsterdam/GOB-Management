@@ -6,6 +6,7 @@ from api.database.models import Log
 from api.database.base import db_session
 from api.fields import FilterConnectionField
 
+
 # Create a generic class to mutualize description of people attributes for both queries and mutations
 class LogAttribute:
     logid = graphene.Int(description="Unique identification of the log entry")
