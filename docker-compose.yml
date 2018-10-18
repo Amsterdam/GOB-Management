@@ -1,0 +1,21 @@
+version: '3.0'
+
+services:
+
+  management_service:
+    build: src
+    ports:
+      - "8143:8000"
+    container_name: management_service
+    environment:
+      DATABASE_PORT_OVERRIDE: 5432
+      DATABASE_HOST_OVERRIDE: management_database
+      UWSGI_HTTP: ":8000"
+      UWSGI_MODULE: "api.wsgi"
+      UWSGI_CALLABLE: "application"
+      UWSGI_MASTER: 1
+
+networks:
+  default:
+    external:
+      name: gob-network
