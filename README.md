@@ -93,6 +93,8 @@ If GOB-Workflow project has already been initialised then execute:
     docker-compose up management_database &
 ```
 
+Default, the API is exposed at port 5001.
+ 
 Start the API
 
 ```
@@ -100,7 +102,9 @@ Start the API
     python -m api
 ```
 
-The API is exposed at http://127.0.0.1:5000/ when running locally.
+The API is exposed at http://127.0.0.1:5001/ when running locally.
+
+The port can be changed by setting the GOB_MANAGEMENT_PORT variable.
 
 ### Tests
 
