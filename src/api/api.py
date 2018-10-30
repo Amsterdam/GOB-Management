@@ -7,6 +7,7 @@ from api.schemas import schema
 
 CORS(app)
 
+
 def _health():
     return 'Connectivity OK'
 
