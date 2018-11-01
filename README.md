@@ -1,4 +1,72 @@
-# GOB-Management API
+# GOB-Management
+
+Provides for an API to monitor and manage GOB
+
+# Docker
+
+## Requirements
+
+* docker-compose >= 1.17
+* docker ce >= 18.03
+    
+## Run
+
+```bash
+docker-compose build
+docker-compose up &
+```
+
+The API is exposed at port 8143
+
+## Tests
+
+```bash
+docker-compose run test
+```
+
+# Local
+
+## Requirements
+
+* python >= 3.6
+    
+## Initialisation
+
+Create a virtual environment:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r src/requirements.txt
+```
+    
+Or activate the previously created virtual environment
+
+```bash
+source venv/bin/activate
+```
+    
+# Run
+
+Start the service:
+
+```bash
+cd src
+python -m gobmanagement
+```
+
+The API is exposed at port 5001
+
+## Tests
+
+Run the tests:
+
+```bash
+cd src
+sh test.sh
+```
+
+# GraphQL
 
 GOB Management API provides a graphql endpoint on process logs.
 
@@ -62,60 +130,3 @@ To get a list of all possible source-entity combinations use:
   }
 }
 ```
-
-# Requirements
-
-    * docker-compose >= 1.17
-    * docker ce >= 18.03
-    * python >= 3.6
-
-# Installation
-
-## Local
-
-Create a virtual environment:
-
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r src/requirements.txt
-
-Or activate the previously created virtual environment
-
-    source venv/bin/activate
-
-The API depends on a running management database.
-To start a database instance follow the instructions in the GOB-Workflow project.
-
-If GOB-Workflow project has already been initialised then execute:
-
-```bash
-    cd ../GOB-Workflow
-    docker-compose up management_database &
-```
-
-Default, the API is exposed at port 5001.
- 
-Start the API
-
-```
-    cd src
-    python -m api
-```
-
-The API is exposed at http://127.0.0.1:5001/ when running locally.
-
-The port can be changed by setting the GOB_MANAGEMENT_PORT variable.
-
-### Tests
-
-Testing is not yet available
-
-
-## Docker
-
-```bash
-    docker-compose build
-    docker-compose up
-```
-
-The API is exposed at http://127.0.0.1:8142/ when running in docker.
