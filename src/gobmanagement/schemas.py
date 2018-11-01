@@ -2,9 +2,9 @@ import graphene
 
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
-from api.database.models import Log
-from api.database.base import db_session
-from api.fields import FilterConnectionField
+from gobmanagement.database.models import Log
+from gobmanagement.database.base import db_session
+from gobmanagement.fields import FilterConnectionField
 
 
 # Create a generic class to mutualize description of people attributes for both queries and mutations
