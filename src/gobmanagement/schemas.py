@@ -3,7 +3,7 @@ import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
 from gobmanagement.database.models import Log
-from gobmanagement.database.base import db_session
+from gobmanagement.database.base import db_session, engine
 from gobmanagement.fields import FilterConnectionField
 
 
@@ -36,6 +36,28 @@ class LogConnection(graphene.relay.Connection):
         node = LogType
 
 
+class MsgCategory(graphene.ObjectType):
+    level = graphene.String()
+    count = graphene.Int()
+
+    def __init__(self, level, count):
+        self.level = level
+        self.count = count
+
+
+class LogDay(graphene.ObjectType):
+
+    date = graphene.DateTime(description="Date of the log")
+    categories = graphene.List(MsgCategory, description="Message categories at the given date")
+
+    def __init__(self, date, categories):
+        self.date = date
+        self.categories = categories
+
+    class Meta:
+        interfaces = (graphene.relay.Node,)
+
+
 class SourceEntity(graphene.ObjectType):
 
     source = graphene.String(description="The source for the process")
@@ -59,11 +81,24 @@ class Query(graphene.ObjectType):
                                  source=graphene.String(),
                                  catalogue=graphene.String(),
                                  entity=graphene.String())
+
     source_entities = graphene.List(SourceEntity)
+    log_days = graphene.List(LogDay)
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
         return [SourceEntity(result.source, result.catalogue, result.entity) for result in results]
+
+    def resolve_log_days(self, _):
+        result = []
+        logdates = engine.execute("SELECT DISTINCT(DATE(logs.timestamp)) AS logdate FROM logs")
+        for logdate in logdates:
+            date = logdate[0]
+            categories = engine.execute(
+                f"SELECT level, COUNT(*) AS count FROM logs WHERE DATE(timestamp)=DATE('{date}') GROUP BY level")
+            categories = [MsgCategory(category.level, category.count) for category in categories]
+            result.append(LogDay(date, categories))
+        return result
 
 
 schema = graphene.Schema(query=Query)
