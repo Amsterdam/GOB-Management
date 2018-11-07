@@ -48,11 +48,13 @@ class MsgCategory(graphene.ObjectType):
 class LogDay(graphene.ObjectType):
 
     date = graphene.DateTime(description="Date of the log")
-    categories = graphene.List(MsgCategory, description="Message categories at the given date")
+    level = graphene.String(description="Log level (eg INFO, WARNING, ...)")
+    count = graphene.Int(description="Number of messages at the given date and for the given level")
 
-    def __init__(self, date, categories):
+    def __init__(self, date, level, count):
         self.date = date
-        self.categories = categories
+        self.level = level
+        self.count = count
 
     class Meta:
         interfaces = (graphene.relay.Node,)
@@ -83,22 +85,27 @@ class Query(graphene.ObjectType):
                                  entity=graphene.String())
 
     source_entities = graphene.List(SourceEntity)
-    log_days = graphene.List(LogDay)
+    log_days = graphene.List(LogDay,
+                             source=graphene.String(),
+                             catalogue=graphene.String(),
+                             entity=graphene.String())
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
         return [SourceEntity(result.source, result.catalogue, result.entity) for result in results]
 
-    def resolve_log_days(self, _):
-        result = []
-        logdates = engine.execute("SELECT DISTINCT(DATE(logs.timestamp)) AS logdate FROM logs")
-        for logdate in logdates:
-            date = logdate[0]
-            categories = engine.execute(
-                f"SELECT level, COUNT(*) AS count FROM logs WHERE DATE(timestamp)=DATE('{date}') GROUP BY level")
-            categories = [MsgCategory(category.level, category.count) for category in categories]
-            result.append(LogDay(date, categories))
-        return result
+    def resolve_log_days(self, _, **kwargs):
+        filter = "WHERE " + " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
+        statement = f"""
+            SELECT DATE(timestamp) AS logdate,
+                   level,
+                   COUNT(*) AS count
+            FROM logs
+            {filter}
+            GROUP BY logdate, level
+            ORDER BY logdate        
+        """
+        return [LogDay(result.logdate, result.level, result.count) for result in engine.execute(statement)]
 
 
 schema = graphene.Schema(query=Query)
