@@ -48,11 +48,13 @@ class MsgCategory(graphene.ObjectType):
 class LogDay(graphene.ObjectType):
 
     date = graphene.DateTime(description="Date of the log")
+    job = graphene.String(description="Job id of the log")
     level = graphene.String(description="Log level (eg INFO, WARNING, ...)")
     count = graphene.Int(description="Number of messages at the given date and for the given level")
 
-    def __init__(self, date, level, count):
+    def __init__(self, date, job, level, count):
         self.date = date
+        self.job = job
         self.level = level
         self.count = count
 
@@ -98,14 +100,15 @@ class Query(graphene.ObjectType):
         filter = "WHERE " + " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
         statement = f"""
             SELECT DATE(timestamp) AS logdate,
+                   process_id as job,
                    level,
                    COUNT(*) AS count
             FROM logs
             {filter}
-            GROUP BY logdate, level
+            GROUP BY logdate, job, level
             ORDER BY logdate        
         """
-        return [LogDay(result.logdate, result.level, result.count) for result in engine.execute(statement)]
+        return [LogDay(result.logdate, result.job, result.level, result.count) for result in engine.execute(statement)]
 
 
 schema = graphene.Schema(query=Query)
