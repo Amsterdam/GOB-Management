@@ -65,6 +65,7 @@ class Job(graphene.ObjectType):
     class Meta:
         interfaces = (graphene.relay.Node,)
 
+
 class SourceEntity(graphene.ObjectType):
 
     source = graphene.String(description="The source for the process")
