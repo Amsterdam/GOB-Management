@@ -45,22 +45,25 @@ class MsgCategory(graphene.ObjectType):
         self.count = count
 
 
-class LogDay(graphene.ObjectType):
+class Job(graphene.ObjectType):
 
-    date = graphene.DateTime(description="Date of the log")
-    job = graphene.String(description="Job id of the log")
-    level = graphene.String(description="Log level (eg INFO, WARNING, ...)")
-    count = graphene.Int(description="Number of messages at the given date and for the given level")
+    process_id = graphene.String(description="Process id of the job")
+    day = graphene.String(description="Day that the job has started")
+    name = graphene.String(description="Name of the job")
+    source = graphene.String(description="Source for the job")
+    destination = graphene.String(description="Destination for the job")
+    catalogue = graphene.String(description="Catalogue that is handled by the job")
+    entity = graphene.String(description="Entity that is handled by the job")
+    starttime = graphene.DateTime(description="Time when the job was started")
+    endtime = graphene.String(description="Time when the job has ended")
+    level = graphene.String(description="Level of the logs within a job")
+    count = graphene.Int(description="Number of logs within the job of the given level")
 
-    def __init__(self, date, job, level, count):
-        self.date = date
-        self.job = job
-        self.level = level
-        self.count = count
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
     class Meta:
         interfaces = (graphene.relay.Node,)
-
 
 class SourceEntity(graphene.ObjectType):
 
@@ -87,28 +90,64 @@ class Query(graphene.ObjectType):
                                  entity=graphene.String())
 
     source_entities = graphene.List(SourceEntity)
-    log_days = graphene.List(LogDay,
-                             source=graphene.String(),
-                             catalogue=graphene.String(),
-                             entity=graphene.String())
+
+    jobs = graphene.List(Job,
+                         source=graphene.String(),
+                         catalogue=graphene.String(),
+                         entity=graphene.String())
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
         return [SourceEntity(result.source, result.catalogue, result.entity) for result in results]
 
-    def resolve_log_days(self, _, **kwargs):
+    def resolve_jobs(self, _, **kwargs):
         filter = "WHERE " + " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
         statement = f"""
-            SELECT DATE(timestamp) AS logdate,
-                   process_id as job,
-                   level,
-                   COUNT(*) AS count
-            FROM logs
-            {filter}
-            GROUP BY logdate, job, level
-            ORDER BY logdate        
+            select job.process_id,
+                   firstlog.day,
+                   firstlog.name,
+                   job.source,
+                   job.destination,
+                   job.catalogue,
+                   job.entity,
+                   firstlog.starttime,
+                   lastlog.endtime,
+                   level.level,
+                   level.count
+            from (
+                select process_id,
+                       min(logid) as minlogid,
+                       max(logid) as maxlogid,
+                       source,
+                       destination,
+                       catalogue,
+                       entity
+                from logs
+                {filter}
+                group by process_id, source, destination, catalogue, entity
+                order by process_id
+            ) as job
+            join (
+                select logid,
+                       name,
+                       timestamp as starttime,
+                       date(timestamp) as day
+                from logs
+            ) as firstlog on firstlog.logid = job.minlogid
+            join (
+                select logid,
+                       timestamp as endtime
+                from logs
+            ) as lastlog on lastlog.logid = job.maxlogid
+            join (
+                select process_id,
+                       level,
+                       count(level)
+                    from logs
+                    group by process_id, level
+            ) as level on level.process_id = job.process_id
         """
-        return [LogDay(result.logdate, result.job, result.level, result.count) for result in engine.execute(statement)]
+        return [Job(**dict(result)) for result in engine.execute(statement)]
 
 
 schema = graphene.Schema(query=Query)
