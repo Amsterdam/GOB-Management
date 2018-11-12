@@ -1,9 +1,9 @@
 from flask_graphql import GraphQLView
 from flask_cors import CORS
 
-from api.app import app
-from api.database.base import db_session
-from api.schemas import schema
+from gobmanagement.app import app
+from gobmanagement.database.base import db_session
+from gobmanagement.schemas import schema
 
 CORS(app)
 
