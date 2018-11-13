@@ -95,7 +95,9 @@ class Query(graphene.ObjectType):
     jobs = graphene.List(Job,
                          source=graphene.String(),
                          catalogue=graphene.String(),
-                         entity=graphene.String())
+                         entity=graphene.String(),
+                         startyear=graphene.String(),
+                         startmonth=graphene.String())
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
@@ -104,6 +106,7 @@ class Query(graphene.ObjectType):
     def resolve_jobs(self, _, **kwargs):
         filter = "WHERE " + " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
         statement = f"""
+           select * from (
             select job.process_id,
                    firstlog.day,
                    firstlog.name,
@@ -112,7 +115,11 @@ class Query(graphene.ObjectType):
                    job.catalogue,
                    job.entity,
                    firstlog.starttime,
+                   firstlog.year as startyear,
+                   firstlog.month as startmonth,
                    lastlog.endtime,
+                   lastlog.year as endyear,
+                   lastlog.month as endmonth,
                    level.level,
                    level.count
             from (
@@ -124,20 +131,22 @@ class Query(graphene.ObjectType):
                        catalogue,
                        entity
                 from logs
-                {filter}
                 group by process_id, source, destination, catalogue, entity
-                order by process_id
             ) as job
             join (
                 select logid,
                        name,
                        timestamp as starttime,
-                       date(timestamp) as day
+                       date(timestamp) as day,
+                       date_part('year', timestamp) as year,
+                       date_part('month', timestamp) as month
                 from logs
             ) as firstlog on firstlog.logid = job.minlogid
             join (
                 select logid,
-                       timestamp as endtime
+                       timestamp as endtime,
+                       date_part('year', timestamp) as year,
+                       date_part('month', timestamp) as month
                 from logs
             ) as lastlog on lastlog.logid = job.maxlogid
             join (
@@ -147,6 +156,9 @@ class Query(graphene.ObjectType):
                     from logs
                     group by process_id, level
             ) as level on level.process_id = job.process_id
+            order by firstlog.starttime desc
+            ) as result
+            {filter}
         """
         return [Job(**dict(result)) for result in engine.execute(statement)]
 
