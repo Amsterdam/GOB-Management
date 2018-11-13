@@ -96,8 +96,8 @@ class Query(graphene.ObjectType):
                          source=graphene.String(),
                          catalogue=graphene.String(),
                          entity=graphene.String(),
-                         startyear=graphene.Int(),
-                         startmonth=graphene.Int())
+                         startyear=graphene.String(),
+                         startmonth=graphene.String())
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
