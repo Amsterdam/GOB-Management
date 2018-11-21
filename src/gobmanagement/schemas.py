@@ -2,7 +2,7 @@ import graphene
 
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
-from gobmanagement.database.models import Log
+from gobcore.model.sa.management import Log
 from gobmanagement.database.base import db_session, engine
 from gobmanagement.fields import FilterConnectionField
 
