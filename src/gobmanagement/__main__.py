@@ -9,4 +9,4 @@ import os
 
 from gobmanagement.api import app
 
-app.run(port=os.getenv("GOB_MANAGEMENT_PORT", 5001))
+app.run(port=os.getenv("GOB_MANAGEMENT_PORT", 8143))
