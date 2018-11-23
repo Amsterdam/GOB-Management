@@ -2,19 +2,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-import alembic.config
-
 from gobcore.model.sa.management import Base
 
 from .config import GOB_MANAGEMENT_DB
-
-# Database migrations are handled by alembic
-# alembic upgrade head
-alembicArgs = [
-    '--raiseerr',
-    'upgrade', 'head',
-]
-alembic.config.main(argv=alembicArgs)
 
 # Create database engine
 db_uri = URL(**GOB_MANAGEMENT_DB)
