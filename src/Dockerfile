@@ -12,8 +12,4 @@ RUN rm requirements.txt
 # Copy gobmanagement module
 COPY gobmanagement gobmanagement
 
-# Copy alembic config
-COPY alembic alembic
-COPY alembic.ini alembic.ini
-
 CMD uwsgi

@@ -1,10 +1,32 @@
 import graphene
 
-from graphene_sqlalchemy import SQLAlchemyObjectType
+from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 
-from gobcore.model.sa.management import Log
+from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
 from gobmanagement.database.base import db_session, engine
 from gobmanagement.fields import FilterConnectionField
+
+
+class Service(SQLAlchemyObjectType):
+    class Meta:
+        model = ServiceModel
+        interfaces = (graphene.relay.Node, )
+
+
+class ServiceConnection(graphene.relay.Connection):
+    class Meta:
+        node = Service
+
+
+class ServiceTask(SQLAlchemyObjectType):
+    class Meta:
+        model = ServiceTaskModel
+        interfaces = (graphene.relay.Node, )
+
+
+class ServiceTaskConnection(graphene.relay.Connection):
+    class Meta:
+        node = ServiceTask
 
 
 # Create a generic class to mutualize description of people attributes for both queries and mutations
@@ -91,6 +113,10 @@ class Query(graphene.ObjectType):
                                  entity=graphene.String())
 
     source_entities = graphene.List(SourceEntity)
+
+    services = SQLAlchemyConnectionField(ServiceConnection)
+
+    tasks = SQLAlchemyConnectionField(ServiceTaskConnection)
 
     jobs = graphene.List(Job,
                          source=graphene.String(),
