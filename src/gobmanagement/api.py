@@ -1,7 +1,7 @@
 from flask_graphql import GraphQLView
 from flask_cors import CORS
 
-from gobmanagement.app import app
+from gobmanagement.app import app, socketio
 from gobmanagement.database.base import db_session
 from gobmanagement.schemas import schema
 
@@ -32,3 +32,16 @@ for route, view_func in ROUTES:
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
+
+def some_function():
+    socketio.emit('some event', {'data': 42})
+
+@socketio.on('connect')
+def test_connect():
+    print("CONNECT")
+    socketio.emit('my response', {'data': 'Connected'})
+
+@socketio.on('disconnect')
+def test_disconnect():
+    print("DISCONNECT")
+    print('Client disconnected')
