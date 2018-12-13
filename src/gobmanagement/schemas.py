@@ -35,6 +35,7 @@ class LogAttribute:
     timestamp = graphene.DateTime(description="Local timestamp of when the log entry was created")
     process_id = graphene.String(description="The id of the process to which this log entry belongs")
     source = graphene.String(description="The source for the process")
+    application = graphene.String(description="The application for the process")
     destination = graphene.String(description="The destination for the process")
     catalogue = graphene.String(description="The catalogue that is handled by the process")
     entity = graphene.String(description="The entity that is handled by the process")
@@ -73,6 +74,7 @@ class Job(graphene.ObjectType):
     day = graphene.String(description="Day that the job has started")
     name = graphene.String(description="Name of the job")
     source = graphene.String(description="Source for the job")
+    application = graphene.String(description="Source application for the job")
     destination = graphene.String(description="Destination for the job")
     catalogue = graphene.String(description="Catalogue that is handled by the job")
     entity = graphene.String(description="Entity that is handled by the job")
@@ -137,6 +139,7 @@ class Query(graphene.ObjectType):
                    firstlog.day,
                    firstlog.name,
                    job.source,
+                   job.application,
                    job.destination,
                    job.catalogue,
                    job.entity,
@@ -153,11 +156,12 @@ class Query(graphene.ObjectType):
                        min(logid) as minlogid,
                        max(logid) as maxlogid,
                        source,
+                       application,
                        destination,
                        catalogue,
                        entity
                 from logs
-                group by process_id, source, destination, catalogue, entity
+                group by process_id, source, application, destination, catalogue, entity
             ) as job
             join (
                 select logid,
