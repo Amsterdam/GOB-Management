@@ -7,7 +7,6 @@ On startup the gobmanagement is instantiated.
 """
 import os
 
-from gobmanagement.api import app
-from gobmanagement.app import socketio
+from gobmanagement.api import app, socketio
 
 socketio.run(app=app, port=os.getenv("GOB_MANAGEMENT_PORT", 8143))
