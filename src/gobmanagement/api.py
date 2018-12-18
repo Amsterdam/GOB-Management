@@ -30,7 +30,7 @@ ROUTES = [
 for route, view_func in ROUTES:
     app.route(rule=route)(view_func)
 
-socketio = SocketIO(app, path="/gob_management/socket.io")
+socketio = SocketIO(app, path="/gob_management/socket.io", cors_credentials=False)
 logBroadcaster = LogBroadcaster(socketio)
 
 
@@ -42,6 +42,11 @@ def shutdown_session(exception=None):
 @socketio.on('connect')
 def socket_connect():
     logBroadcaster.on_connect()
+
+
+@socketio.on_error_default
+def error_handler(e):
+    print('A socket error has occurred: ' + str(e))
 
 
 @socketio.on('disconnect')
