@@ -23,6 +23,7 @@ class LogBroadcaster():
         self._socketio = _socketio
         self._clients = 0
         self._broadcaster = None
+        self._previous_last_logid = None
 
     def on_connect(self):
         """On connect of a new client
@@ -61,12 +62,11 @@ class LogBroadcaster():
         """
         print("Start broadcast new logs", self._clients)
 
-        previous_last_logid = None
         while self._clients > 0:
             last_logid = get_last_logid()
-            if last_logid != previous_last_logid:
+            if last_logid != self._previous_last_logid:
                 self._socketio.emit('new_logs', {'last_logid': last_logid})
-                previous_last_logid = last_logid
+                self._previous_last_logid = last_logid
             time.sleep(LogBroadcaster.CHECK_LOGS_INTERVAL)
 
         self._broadcaster = None
