@@ -12,4 +12,4 @@ RUN rm requirements.txt
 # Copy gobmanagement module
 COPY gobmanagement gobmanagement
 
-CMD uwsgi --http-websockets --enable-threads --threads 4
+CMD uwsgi --gevent 100 --http-websockets --enable-threads --threads 4
