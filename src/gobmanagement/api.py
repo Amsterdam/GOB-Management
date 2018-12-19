@@ -2,6 +2,7 @@ from flask_graphql import GraphQLView
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
+from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH
 from gobmanagement.app import app
 from gobmanagement.database.base import db_session
 from gobmanagement.schemas import schema
@@ -12,7 +13,7 @@ def _health():
     return 'Connectivity OK'
 
 
-CORS(app)
+CORS(app, origins=ALLOWED_ORIGINS)
 
 _graphql = GraphQLView.as_view(
                 'graphql',
@@ -24,13 +25,15 @@ _graphql = GraphQLView.as_view(
 ROUTES = [
     # Health check URL
     ('/status/health/', _health),
-    ('/gob_management/graphql/', _graphql)
+    (f'{API_BASE_PATH}/graphql/', _graphql)
 ]
 
 for route, view_func in ROUTES:
     app.route(rule=route)(view_func)
 
-socketio = SocketIO(app, path="/gob_management/socket.io", cors_credentials=False)
+socketio = SocketIO(app,
+                    path=f"{API_BASE_PATH}/socket.io",
+                    cors_allowed_origins=ALLOWED_ORIGINS)
 logBroadcaster = LogBroadcaster(socketio)
 
 
