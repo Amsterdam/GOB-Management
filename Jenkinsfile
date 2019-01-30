@@ -54,7 +54,7 @@ if (BRANCH == "develop") {
     node {
         stage('Push develop image') {
             tryStep "image tagging", {
-                def image = docker.image("build.datapunt.amsterdam.nl:5000/datapunt/gob_management_api:${env.BUILD_NUMBER}")
+                def image = docker.image("datapunt/gob_management_api:${env.BUILD_NUMBER}")
                 image.pull()
                 image.push("develop")
             }
@@ -98,7 +98,7 @@ if (BRANCH == "master") {
         stage('Push production image') {
             tryStep "image tagging", {
                 docker.withRegistry('https://repo.data.amsterdam.nl','docker-registry') {
-                def image = docker.image("build.datapunt.amsterdam.nl:5000/datapunt/gob_management_api:${env.BUILD_NUMBER}")
+                def image = docker.image("datapunt/gob_management_api:${env.BUILD_NUMBER}")
                     image.pull()
                     image.push("production")
                     image.push("latest")
