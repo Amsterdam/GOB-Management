@@ -8,9 +8,14 @@ from gobmanagement.fields import FilterConnectionField
 
 
 class Service(SQLAlchemyObjectType):
+    service_id = graphene.Int(description="Unique identification of the service")
+
     class Meta:
         model = ServiceModel
         interfaces = (graphene.relay.Node, )
+
+    def resolve_service_id(self, args):
+        return self.id
 
 
 class ServiceConnection(graphene.relay.Connection):
@@ -80,8 +85,9 @@ class Job(graphene.ObjectType):
     entity = graphene.String(description="Entity that is handled by the job")
     starttime = graphene.DateTime(description="Time when the job was started")
     endtime = graphene.String(description="Time when the job has ended")
-    level = graphene.String(description="Level of the logs within a job")
-    count = graphene.Int(description="Number of logs within the job of the given level")
+    infos = graphene.Int(description="Info logs within a job")
+    warnings = graphene.Int(description="Warning logs within a job")
+    errors = graphene.Int(description="Error logs within a job")
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -138,34 +144,35 @@ class Query(graphene.ObjectType):
             select job.process_id,
                    firstlog.day,
                    firstlog.name,
-                   job.source,
-                   job.application,
-                   job.destination,
-                   job.catalogue,
-                   job.entity,
+                   firstlog.source,
+                   firstlog.application,
+                   firstlog.destination,
+                   firstlog.catalogue,
+                   firstlog.entity,
                    firstlog.starttime,
                    firstlog.year as startyear,
                    firstlog.month as startmonth,
                    lastlog.endtime,
                    lastlog.year as endyear,
                    lastlog.month as endmonth,
-                   level.level,
-                   level.count
+                   coalesce(infos.count, 0) as infos,
+                   coalesce(warnings.count, 0) as warnings,
+                   coalesce(errors.count, 0) as errors
             from (
                 select process_id,
                        min(logid) as minlogid,
-                       max(logid) as maxlogid,
-                       source,
-                       application,
-                       destination,
-                       catalogue,
-                       entity
+                       max(logid) as maxlogid
                 from logs
-                group by process_id, source, application, destination, catalogue, entity
+                group by process_id
             ) as job
             join (
                 select logid,
                        name,
+                       application,
+                       source,
+                       destination,
+                       catalogue,
+                       entity,
                        timestamp as starttime,
                        date(timestamp) as day,
                        date_part('year', timestamp) as year,
@@ -179,13 +186,27 @@ class Query(graphene.ObjectType):
                        date_part('month', timestamp) as month
                 from logs
             ) as lastlog on lastlog.logid = job.maxlogid
-            join (
+            left outer join (
                 select process_id,
-                       level,
-                       count(level)
-                    from logs
-                    group by process_id, level
-            ) as level on level.process_id = job.process_id
+                       count(*) as count
+                from logs
+                where level = 'ERROR'
+                group by process_id
+            ) as errors on errors.process_id = job.process_id
+            left outer join (
+                select process_id,
+                       count(*) as count
+                from logs
+                where level = 'WARNING'
+                group by process_id
+            ) as warnings on warnings.process_id = job.process_id
+            left outer join (
+                select process_id,
+                       count(*) as count
+                from logs
+                where level = 'INFO'
+                group by process_id
+            ) as infos on infos.process_id = job.process_id
             order by firstlog.starttime desc
             ) as result
             {filter}
