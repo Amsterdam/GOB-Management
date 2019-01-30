@@ -71,7 +71,7 @@ class LogBroadcaster():
 
             last_timestamp = get_last_service_timestamp()
             if last_timestamp != self._previous_last_timestamp:
-                self._socketio.emit('update_services', {'last_timestamp': last_timestamp.isoformat() })
+                self._socketio.emit('update_services', {'last_timestamp': last_timestamp.isoformat()})
                 self._previous_last_timestamp = last_timestamp
 
             time.sleep(LogBroadcaster.CHECK_LOGS_INTERVAL)
