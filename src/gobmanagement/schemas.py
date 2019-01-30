@@ -8,9 +8,14 @@ from gobmanagement.fields import FilterConnectionField
 
 
 class Service(SQLAlchemyObjectType):
+    service_id = graphene.Int(description="Unique identification of the service")
+
     class Meta:
         model = ServiceModel
         interfaces = (graphene.relay.Node, )
+
+    def resolve_service_id(self, args):
+        return self.id
 
 
 class ServiceConnection(graphene.relay.Connection):
