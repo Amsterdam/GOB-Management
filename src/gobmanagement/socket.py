@@ -6,7 +6,7 @@ Broadcast 'new_logs' events on any new log messages
 import time
 import threading
 
-from gobmanagement.database import get_last_logid
+from gobmanagement.database import get_last_logid, get_last_service_timestamp
 
 
 class LogBroadcaster():
@@ -24,6 +24,7 @@ class LogBroadcaster():
         self._clients = 0
         self._broadcaster = None
         self._previous_last_logid = None
+        self._previous_last_timestamp = None
 
     def on_connect(self):
         """On connect of a new client
@@ -67,6 +68,12 @@ class LogBroadcaster():
             if last_logid != self._previous_last_logid:
                 self._socketio.emit('new_logs', {'last_logid': last_logid})
                 self._previous_last_logid = last_logid
+
+            last_timestamp = get_last_service_timestamp()
+            if last_timestamp != self._previous_last_timestamp:
+                self._socketio.emit('update_services', {'last_timestamp': last_timestamp.isoformat() })
+                self._previous_last_timestamp = last_timestamp
+
             time.sleep(LogBroadcaster.CHECK_LOGS_INTERVAL)
 
         self._broadcaster = None
