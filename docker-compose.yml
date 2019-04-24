@@ -5,7 +5,7 @@ services:
   gobmanagement:
     build: src
     ports:
-      - "8143:8000"
+      - "8143:8001"
     container_name: gobmanagement
     environment:
       DATABASE_PORT_OVERRIDE: 5432
