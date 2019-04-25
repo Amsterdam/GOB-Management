@@ -13,6 +13,14 @@ def _health():
     return 'Connectivity OK'
 
 
+def _secure():
+    """
+    Test endpoint for keycloak
+    :return:
+    """
+    return 'Secure access OK'
+
+
 CORS(app, origins=ALLOWED_ORIGINS)
 
 _graphql = GraphQLView.as_view(
@@ -25,6 +33,7 @@ _graphql = GraphQLView.as_view(
 ROUTES = [
     # Health check URL
     ('/status/health/', _health),
+    (f'{API_BASE_PATH}/secure/', _secure),
     (f'{API_BASE_PATH}/graphql/', _graphql)
 ]
 

@@ -5,7 +5,10 @@ services:
   gobmanagement:
     build: src
     ports:
-      - "8143:8000"
+      # Set to 8000 to route requests via gatekeeper
+      # When using gatekeeper, set the variables in .env
+      # Use 8001 to bypass gatekeeper locally
+      - "8143:8001"
     container_name: gobmanagement
     environment:
       DATABASE_PORT_OVERRIDE: 5432
