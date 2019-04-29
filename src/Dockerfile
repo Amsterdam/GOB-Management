@@ -1,4 +1,4 @@
-FROM amsterdam/docker_python:latest
+FROM amsterdam/python
 MAINTAINER datapunt@amsterdam.nl
 
 # Install gobmanagement service in /app folder
