@@ -77,6 +77,7 @@ class Job(graphene.ObjectType):
 
     process_id = graphene.String(description="Process id of the job")
     job_id = graphene.Int(description="Id of the job")
+    age_category = graphene.String(description="Time since job was started as age category")
     day = graphene.String(description="Day that the job has started")
     name = graphene.String(description="Name of the job")
     source = graphene.String(description="Source for the job")
@@ -146,6 +147,13 @@ class Query(graphene.ObjectType):
         query = """
 SELECT log.process_id                AS process_id,
        job.id                        AS job_id,
+       jobinfo.duration              AS bruto_duration,
+       stepdurations.duration        AS netto_duration,
+       CASE WHEN jobinfo.time_ago <= '24 hours'::interval THEN ' 0 - 24 uur'
+            WHEN jobinfo.time_ago <= '48 hours'::interval THEN '24 - 48 uur'
+            WHEN jobinfo.time_ago <= '96 hours'::interval THEN '48 - 96 uur'
+                                                          ELSE 'Ouder'
+       END                           AS age_category,
        date(job.start)               AS day,
        log.name                      AS name,
        log.source                    AS source,
@@ -165,6 +173,18 @@ SELECT log.process_id                AS process_id,
        step.name                     AS step,
        step.status                   AS status
 FROM jobs AS job
+JOIN (
+    SELECT id,
+           jobs.end - jobs.start AS duration,
+           now() - jobs.start    AS time_ago
+    FROM jobs
+) as jobinfo ON jobinfo.id = job.id
+JOIN (
+    SELECT jobid,
+           SUM(jobsteps.end - jobsteps.start) AS duration
+    FROM jobsteps
+    GROUP BY jobid
+) as stepdurations ON stepdurations.jobid = job.id
 JOIN (
     SELECT jobid      AS jobid,
            min(logid) AS logid
