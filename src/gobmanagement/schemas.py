@@ -76,6 +76,7 @@ class MsgCategory(graphene.ObjectType):
 class Job(graphene.ObjectType):
 
     process_id = graphene.String(description="Process id of the job")
+    job_id = graphene.Int(description="Id of the job")
     day = graphene.String(description="Day that the job has started")
     name = graphene.String(description="Name of the job")
     source = graphene.String(description="Source for the job")
@@ -88,6 +89,8 @@ class Job(graphene.ObjectType):
     infos = graphene.Int(description="Info logs within a job")
     warnings = graphene.Int(description="Warning logs within a job")
     errors = graphene.Int(description="Error logs within a job")
+    step = graphene.String(description="Last step")
+    status = graphene.String(description="Status of last step")
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -138,79 +141,85 @@ class Query(graphene.ObjectType):
         return [SourceEntity(result.source, result.catalogue, result.entity) for result in results]
 
     def resolve_jobs(self, _, **kwargs):
-        filter = "WHERE " + " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
+        filter = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
+
+        query = """
+SELECT log.process_id                AS process_id,
+       job.id                        AS job_id,
+       date(job.start)               AS day,
+       log.name                      AS name,
+       log.source                    AS source,
+       log.applicatiON               AS application,
+       log.destinatiON               AS destination,
+       log.catalogue                 AS catalogue,
+       log.entity                    AS entity,
+       job.start                     AS starttime,
+       date_part('year', job.start)  AS startyear,
+       date_part('month', job.start) AS startmonth,
+       job.end                       AS endtime,
+       date_part('year', job.end)    AS endyear,
+       date_part('month', job.end)   AS endmonth,
+       msg.infos                     AS infos,
+       msg.warnings                  AS warnings,
+       msg.errors                    AS errors,
+       step.name                     AS step,
+       step.status                   AS status
+FROM jobs AS job
+JOIN (
+    SELECT jobid      AS jobid,
+           min(logid) AS logid
+    FROM   logs
+    GROUP BY jobid
+) AS firstlog ON firstlog.jobid = job.id
+JOIN (
+    SELECT logid,
+           name,
+           process_id,
+           application,
+           source,
+           destination,
+           catalogue,
+           entity
+    FROM   logs
+) AS log ON log.logid = firstlog.logid
+JOIN (
+    SELECT jobid   AS jobid,
+           max(id) AS stepid
+    FROM   jobsteps
+    GROUP BY jobid
+) AS laststep ON laststep.jobid = job.id
+JOIN (
+    SELECT id,
+           name,
+           status
+    FROM   jobsteps
+) AS step ON step.id = laststep.stepid
+LEFT OUTER JOIN (
+    SELECT msg.jobid AS jobid,
+           inf.count AS infos,
+           wrn.count AS warnings,
+           err.count AS errors
+    FROM (
+             SELECT jobid,
+                    level,
+                    count(*)
+             FROM logs
+             GROUP BY jobid, level
+         ) AS msg
+             left outer JOIN logs inf ON msg.jobid = inf.jobid AND msg.level = inf.level AND inf.level = 'INFO'
+             left outer JOIN logs wrn ON msg.jobid = wrn.jobid AND msg.level = wrn.level AND wrn.level = 'WARNING'
+             left outer JOIN logs err ON msg.jobid = err.jobid AND msg.level = err.level AND err.level = 'ERROR'
+    GROUP BY msg.jobid
+) AS msg ON msg.jobid = job.id
+"""
+
         statement = f"""
-           select * from (
-            select job.process_id,
-                   firstlog.day,
-                   firstlog.name,
-                   firstlog.source,
-                   firstlog.application,
-                   firstlog.destination,
-                   firstlog.catalogue,
-                   firstlog.entity,
-                   firstlog.starttime,
-                   firstlog.year as startyear,
-                   firstlog.month as startmonth,
-                   lastlog.endtime,
-                   lastlog.year as endyear,
-                   lastlog.month as endmonth,
-                   coalesce(infos.count, 0) as infos,
-                   coalesce(warnings.count, 0) as warnings,
-                   coalesce(errors.count, 0) as errors
-            from (
-                select process_id,
-                       min(logid) as minlogid,
-                       max(logid) as maxlogid
-                from logs
-                group by process_id
-            ) as job
-            join (
-                select logid,
-                       name,
-                       application,
-                       source,
-                       destination,
-                       catalogue,
-                       entity,
-                       timestamp as starttime,
-                       date(timestamp) as day,
-                       date_part('year', timestamp) as year,
-                       date_part('month', timestamp) as month
-                from logs
-            ) as firstlog on firstlog.logid = job.minlogid
-            join (
-                select logid,
-                       timestamp as endtime,
-                       date_part('year', timestamp) as year,
-                       date_part('month', timestamp) as month
-                from logs
-            ) as lastlog on lastlog.logid = job.maxlogid
-            left outer join (
-                select process_id,
-                       count(*) as count
-                from logs
-                where level = 'ERROR'
-                group by process_id
-            ) as errors on errors.process_id = job.process_id
-            left outer join (
-                select process_id,
-                       count(*) as count
-                from logs
-                where level = 'WARNING'
-                group by process_id
-            ) as warnings on warnings.process_id = job.process_id
-            left outer join (
-                select process_id,
-                       count(*) as count
-                from logs
-                where level = 'INFO'
-                group by process_id
-            ) as infos on infos.process_id = job.process_id
-            order by firstlog.starttime desc
-            ) as result
-            {filter}
-        """
+SELECT *
+FROM   ( {query} )
+AS     result
+WHERE  {filter}
+ORDER BY starttime DESC
+"""
         return [Job(**dict(result)) for result in engine.execute(statement)]
 
 
