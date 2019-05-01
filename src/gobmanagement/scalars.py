@@ -2,6 +2,7 @@
 """
 from graphene.types import Scalar
 
+
 class Timedelta(Scalar):
 
     @staticmethod

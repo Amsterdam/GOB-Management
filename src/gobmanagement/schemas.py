@@ -134,6 +134,7 @@ class Query(graphene.ObjectType):
     tasks = SQLAlchemyConnectionField(ServiceTaskConnection)
 
     jobs = graphene.List(Job,
+                         days_ago=graphene.Int(),
                          source=graphene.String(),
                          catalogue=graphene.String(),
                          entity=graphene.String(),
@@ -145,9 +146,14 @@ class Query(graphene.ObjectType):
         return [SourceEntity(result.source, result.catalogue, result.entity) for result in results]
 
     def resolve_jobs(self, _, **kwargs):
-        filter = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
+        days_ago = 10
+        if "days_ago" in kwargs:
+            days_ago = int(kwargs["days_ago"])
+            del kwargs["days_ago"]
 
-        query = """
+        where = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else "True"
+
+        query = f"""
 SELECT log.process_id                AS process_id,
        job.id                        AS job_id,
        jobinfo.duration              AS bruto_duration,
@@ -234,13 +240,14 @@ LEFT OUTER JOIN (
              left outer JOIN logs err ON msg.jobid = err.jobid AND msg.level = err.level AND err.level = 'ERROR'
     GROUP BY msg.jobid
 ) AS msg ON msg.jobid = job.id
+WHERE jobinfo.time_ago <= '{days_ago} days'::interval
 """
 
         statement = f"""
 SELECT *
 FROM   ( {query} )
 AS     result
-WHERE  {filter}
+WHERE  {where}
 ORDER BY starttime DESC
 """
         return [Job(**dict(result)) for result in engine.execute(statement)]
