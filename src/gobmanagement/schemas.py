@@ -5,6 +5,7 @@ from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
 from gobmanagement.database.base import db_session, engine
 from gobmanagement.fields import FilterConnectionField
+from gobmanagement.scalars import Timedelta
 
 
 class Service(SQLAlchemyObjectType):
@@ -77,6 +78,8 @@ class Job(graphene.ObjectType):
 
     process_id = graphene.String(description="Process id of the job")
     job_id = graphene.Int(description="Id of the job")
+    bruto_duration = Timedelta(description="Bruto duration of the job")
+    netto_duration = Timedelta(description="Netto duration of the job")
     age_category = graphene.String(description="Time since job was started as age category")
     day = graphene.String(description="Day that the job has started")
     name = graphene.String(description="Name of the job")
