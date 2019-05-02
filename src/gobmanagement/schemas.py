@@ -5,6 +5,7 @@ from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
 from gobmanagement.database.base import db_session, engine
 from gobmanagement.fields import FilterConnectionField
+from gobmanagement.scalars import Timedelta
 
 
 class Service(SQLAlchemyObjectType):
@@ -77,6 +78,9 @@ class Job(graphene.ObjectType):
 
     process_id = graphene.String(description="Process id of the job")
     job_id = graphene.Int(description="Id of the job")
+    bruto_duration = Timedelta(description="Bruto duration of the job")
+    netto_duration = Timedelta(description="Netto duration of the job")
+    age_category = graphene.String(description="Time since job was started as age category")
     day = graphene.String(description="Day that the job has started")
     name = graphene.String(description="Name of the job")
     source = graphene.String(description="Source for the job")
@@ -130,6 +134,7 @@ class Query(graphene.ObjectType):
     tasks = SQLAlchemyConnectionField(ServiceTaskConnection)
 
     jobs = graphene.List(Job,
+                         days_ago=graphene.Int(),
                          source=graphene.String(),
                          catalogue=graphene.String(),
                          entity=graphene.String(),
@@ -141,11 +146,23 @@ class Query(graphene.ObjectType):
         return [SourceEntity(result.source, result.catalogue, result.entity) for result in results]
 
     def resolve_jobs(self, _, **kwargs):
-        filter = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else ""
+        days_ago = 10
+        if "days_ago" in kwargs:
+            days_ago = int(kwargs["days_ago"])
+            del kwargs["days_ago"]
 
-        query = """
+        where = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else "True"
+
+        query = f"""
 SELECT log.process_id                AS process_id,
        job.id                        AS job_id,
+       jobinfo.duration              AS bruto_duration,
+       stepdurations.duration        AS netto_duration,
+       CASE WHEN jobinfo.time_ago <= '24 hours'::interval THEN ' 0 - 24 uur'
+            WHEN jobinfo.time_ago <= '48 hours'::interval THEN '24 - 48 uur'
+            WHEN jobinfo.time_ago <= '96 hours'::interval THEN '48 - 96 uur'
+                                                          ELSE 'Ouder'
+       END                           AS age_category,
        date(job.start)               AS day,
        log.name                      AS name,
        log.source                    AS source,
@@ -165,6 +182,18 @@ SELECT log.process_id                AS process_id,
        step.name                     AS step,
        step.status                   AS status
 FROM jobs AS job
+JOIN (
+    SELECT id,
+           jobs.end - jobs.start AS duration,
+           now() - jobs.start    AS time_ago
+    FROM jobs
+) as jobinfo ON jobinfo.id = job.id
+JOIN (
+    SELECT jobid,
+           SUM(jobsteps.end - jobsteps.start) AS duration
+    FROM jobsteps
+    GROUP BY jobid
+) as stepdurations ON stepdurations.jobid = job.id
 JOIN (
     SELECT jobid      AS jobid,
            min(logid) AS logid
@@ -211,13 +240,14 @@ LEFT OUTER JOIN (
              left outer JOIN logs err ON msg.jobid = err.jobid AND msg.level = err.level AND err.level = 'ERROR'
     GROUP BY msg.jobid
 ) AS msg ON msg.jobid = job.id
+WHERE jobinfo.time_ago <= '{days_ago} days'::interval
 """
 
         statement = f"""
 SELECT *
 FROM   ( {query} )
 AS     result
-WHERE  {filter}
+WHERE  {where}
 ORDER BY starttime DESC
 """
         return [Job(**dict(result)) for result in engine.execute(statement)]
