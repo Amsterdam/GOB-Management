@@ -77,7 +77,7 @@ class MsgCategory(graphene.ObjectType):
 class Job(graphene.ObjectType):
 
     process_id = graphene.String(description="Process id of the job")
-    job_id = graphene.Int(description="Id of the job")
+    jobid = graphene.Int(description="Id of the job")
     bruto_duration = Timedelta(description="Bruto duration of the job")
     netto_duration = Timedelta(description="Netto duration of the job")
     age_category = graphene.String(description="Time since job was started as age category")
@@ -118,11 +118,48 @@ class SourceEntity(graphene.ObjectType):
         interfaces = (graphene.relay.Node,)
 
 
+class StepInfo(graphene.ObjectType):
+    stepid = graphene.Int()
+    name = graphene.String()
+    start = graphene.DateTime()
+    end = graphene.DateTime()
+    duration = Timedelta()
+    status = graphene.String()
+
+    def __init__(self, step):
+        self.__dict__.update(step)
+
+    class Meta:
+        interfaces = (graphene.relay.Node,)
+
+
+class JobInfo(graphene.ObjectType):
+    jobid = graphene.Int()
+    name = graphene.String()
+    type = graphene.String()
+    args = graphene.String()
+    start = graphene.DateTime()
+    end = graphene.DateTime()
+    duration = Timedelta()
+    status = graphene.String()
+
+    steps = graphene.List(StepInfo)
+
+    def __init__(self, job, steps):
+        self.steps = [StepInfo(step) for step in steps]
+        self.__dict__.update(job)
+
+    class Meta:
+        interfaces = (graphene.relay.Node,)
+
+
 class Query(graphene.ObjectType):
     """Query objects for GraphQL API."""
     node = graphene.relay.Node.Field()
     logs = FilterConnectionField(LogConnection,
                                  process_id=graphene.String(),
+                                 jobid=graphene.Int(),
+                                 stepid=graphene.Int(),
                                  source=graphene.String(),
                                  catalogue=graphene.String(),
                                  entity=graphene.String())
@@ -135,11 +172,35 @@ class Query(graphene.ObjectType):
 
     jobs = graphene.List(Job,
                          days_ago=graphene.Int(),
+                         jobid=graphene.Int(),
                          source=graphene.String(),
                          catalogue=graphene.String(),
                          entity=graphene.String(),
                          startyear=graphene.String(),
                          startmonth=graphene.String())
+
+    jobinfo = graphene.List(JobInfo, jobid=graphene.Int())
+
+    def resolve_jobinfo(self, _, jobid):
+        statement = f"""
+        SELECT *, id AS jobid, jobs.end - jobs.start AS duration
+        FROM jobs
+        WHERE id = {jobid}
+"""
+        jobs = [dict(job) for job in engine.execute(statement)]
+        if not jobs:
+            return
+        job = jobs[0]
+
+        statement = f"""
+        SELECT *, id AS stepid, jobsteps.end - jobsteps.start AS duration
+        FROM jobsteps
+        WHERE jobid = {jobid}
+        ORDER BY start
+"""
+        steps = [dict(step) for step in engine.execute(statement)]
+
+        return [JobInfo(job, steps)]
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
@@ -155,7 +216,7 @@ class Query(graphene.ObjectType):
 
         query = f"""
 SELECT log.process_id                AS process_id,
-       job.id                        AS job_id,
+       job.id                        AS jobid,
        jobinfo.duration              AS bruto_duration,
        stepdurations.duration        AS netto_duration,
        CASE WHEN jobinfo.time_ago <= '24 hours'::interval THEN ' 0 - 24 uur'
