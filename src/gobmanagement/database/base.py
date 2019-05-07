@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -14,5 +16,23 @@ engine = create_engine(db_uri)
 Base.metadata.bind = engine  # Bind engine to metadata of the base class
 
 # Create database session object
-db_session = scoped_session(sessionmaker(bind=engine, expire_on_commit=False))
+maker = sessionmaker(bind=engine, expire_on_commit=False)
+Session = scoped_session(maker)
+db_session = Session()  # should not be used
 Base.query = db_session.query_property()  # Used by graphql to execute queries
+
+
+@contextmanager
+def session_scope(readonly=False, backend=Session):
+    session = Session()
+    if not readonly:
+        session.flush = lambda: None
+    try:
+        yield session
+        if not readonly:
+            session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
