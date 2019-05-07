@@ -23,7 +23,9 @@ def _secure():
 
 def session_middleware(next, root, info, **args):
     with session_scope() as session:
-        info.session = session
+        info.context = dict(
+            session = session
+        )
         return next(root, info, **args)
 
 
