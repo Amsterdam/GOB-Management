@@ -7,6 +7,7 @@ import time
 import threading
 
 from gobmanagement.database import get_last_logid, get_last_service_timestamp
+from gobmanagement.database.base import session_scope
 
 
 class LogBroadcaster():
@@ -64,12 +65,14 @@ class LogBroadcaster():
         print("Start broadcast new logs", self._clients)
 
         while self._clients > 0:
-            last_logid = get_last_logid()
+            with session_scope(True) as session:
+                last_logid = get_last_logid(session)
+                last_timestamp = get_last_service_timestamp(session)
+
             if last_logid != self._previous_last_logid:
                 self._socketio.emit('new_logs', {'last_logid': last_logid})
                 self._previous_last_logid = last_logid
 
-            last_timestamp = get_last_service_timestamp()
             if last_timestamp != self._previous_last_timestamp:
                 self._socketio.emit('update_services', {'last_timestamp': last_timestamp.isoformat()})
                 self._previous_last_timestamp = last_timestamp

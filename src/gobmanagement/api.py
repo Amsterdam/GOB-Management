@@ -4,7 +4,7 @@ from flask_socketio import SocketIO
 
 from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH
 from gobmanagement.app import app
-from gobmanagement.database.base import db_session
+from gobmanagement.database.base import db_session, session_scope
 from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
 
@@ -21,11 +21,18 @@ def _secure():
     return 'Secure access OK'
 
 
+def session_middleware(next, root, info, **args):
+    with session_scope() as session:
+        info.session = session
+        return next(root, info, **args)
+
+
 CORS(app, origins=ALLOWED_ORIGINS)
 
 _graphql = GraphQLView.as_view(
                 'graphql',
                 schema=schema,
+                middleware=[session_middleware],
                 graphiql=True  # for having the GraphiQL interface
             )
 
