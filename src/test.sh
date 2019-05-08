@@ -7,7 +7,7 @@ echo "Running style checks"
 flake8
 
 echo "Running unit tests"
-#pytest
+pytest
 
 echo "Running coverage tests"
 #export COVERAGE_FILE=/tmp/.coverage

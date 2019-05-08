@@ -24,8 +24,8 @@ Base.query = db_session.query_property()  # Used by graphql to execute queries
 
 @contextmanager
 def session_scope(readonly=False, backend=Session):
-    session = Session()
-    if not readonly:
+    session = backend()
+    if readonly:
         session.flush = lambda: None
     try:
         yield session
@@ -34,5 +34,4 @@ def session_scope(readonly=False, backend=Session):
     except Exception:
         session.rollback()
         raise
-    finally:
-        session.close()
+    session.close()
