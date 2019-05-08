@@ -21,12 +21,14 @@ def _secure():
     return 'Secure access OK'
 
 
-def session_middleware(next, root, info, **args):
-    with session_scope() as session:
-        info.context = dict(
-            session = session
-        )
+def create_session_middleware(session_backend=session_scope):
+    def session_middleware(next, root, info, **args):
+        with session_backend() as session:
+            info.context = dict(
+                session=session
+            )
         return next(root, info, **args)
+    return session_middleware
 
 
 CORS(app, origins=ALLOWED_ORIGINS)
@@ -34,7 +36,7 @@ CORS(app, origins=ALLOWED_ORIGINS)
 _graphql = GraphQLView.as_view(
                 'graphql',
                 schema=schema,
-                middleware=[session_middleware],
+                middleware=[create_session_middleware()],
                 graphiql=True  # for having the GraphiQL interface
             )
 
