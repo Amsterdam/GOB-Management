@@ -40,6 +40,7 @@ _graphql = GraphQLView.as_view(
                 graphiql=True  # for having the GraphiQL interface
             )
 
+
 # Routes
 ROUTES = [
     # Health check URL
