@@ -6,7 +6,6 @@ import pytest
 from gobmanagement.database import base
 
 
-
 def test_session_scope_rw():
     session_mock = MagicMock()
     with base.session_scope(backend=lambda: session_mock) as session:
