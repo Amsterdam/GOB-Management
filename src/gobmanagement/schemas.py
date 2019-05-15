@@ -3,9 +3,14 @@ import graphene
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 
 from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
+
+from gobmanagement.database import get_last_logid
+from gobmanagement.database.base import session_scope
 from gobmanagement.database.base import db_session, engine
+
 from gobmanagement.fields import FilterConnectionField
 from gobmanagement.scalars import Timedelta
+from gobmanagement.cache import ResolveCache
 
 
 class Service(SQLAlchemyObjectType):
@@ -181,6 +186,8 @@ class Query(graphene.ObjectType):
 
     jobinfo = graphene.List(JobInfo, jobid=graphene.Int())
 
+    _resolve_cache = ResolveCache()
+
     def resolve_jobinfo(self, _, jobid):
         statement = f"""
         SELECT *, id AS jobid, jobs.end - jobs.start AS duration
@@ -311,7 +318,16 @@ AS     result
 WHERE  {where}
 ORDER BY starttime DESC
 """
-        return [Job(**dict(result)) for result in engine.execute(statement)]
+
+        # Response will change when a new log has become available
+        with session_scope(True) as session:
+            last_logid = get_last_logid(session)
+
+        # Response will also change when the statement changes
+        return Query._resolve_cache.resolve("resolve_jobs",
+                                            last_logid,
+                                            statement,
+                                            lambda: [Job(**dict(result)) for result in engine.execute(statement)])
 
 
 schema = graphene.Schema(query=Query)
