@@ -6,6 +6,7 @@ Performance critical queries can be routed through the ResolveCache
 If nothing has changed the cached response will be returned
 """
 
+
 class ResolveCache:
 
     def __init__(self):
@@ -34,7 +35,7 @@ class ResolveCache:
                 response = cached_result["response"]
 
         if response is None:
-            # Recompute if no cached result exists or is up to date
+            # Recompute if no cached result exists or cache is not up to date
             self._cache[name] = {
                 "id": id,
                 "query": query,
