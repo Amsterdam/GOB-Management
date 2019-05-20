@@ -10,4 +10,4 @@ echo "Running unit tests"
 pytest
 
 echo "Running coverage tests"
-pytest --cov=gobmanagement --cov-report html --cov-fail-under=72
+pytest --cov=gobmanagement --cov-report html --cov-fail-under=73
