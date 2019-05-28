@@ -1,4 +1,3 @@
-from flask import request
 from flask_graphql import GraphQLView
 from flask_cors import CORS
 from flask_socketio import SocketIO
