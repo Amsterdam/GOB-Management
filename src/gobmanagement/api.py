@@ -1,3 +1,4 @@
+from flask import request
 from flask_graphql import GraphQLView
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -31,12 +32,18 @@ def create_session_middleware(session_backend=session_scope):
     return session_middleware
 
 
+def auth_middleware(next, root, info, **args):
+    print("X-Headers")
+    [print(k, v) for k, v in request.headers.items() if k[0] == 'X']
+    return next(root, info, **args)
+
+
 CORS(app, origins=ALLOWED_ORIGINS)
 
 _graphql = GraphQLView.as_view(
                 'graphql',
                 schema=schema,
-                middleware=[create_session_middleware()],
+                middleware=[auth_middleware, create_session_middleware()],
                 graphiql=True  # for having the GraphiQL interface
             )
 
