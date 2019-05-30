@@ -7,6 +7,7 @@ from gobmanagement.app import app
 from gobmanagement.database.base import db_session, session_scope
 from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
+from gobmanagement.auth import RequestUser
 
 
 def _health():
@@ -18,6 +19,8 @@ def _secure():
     Test endpoint for keycloak
     :return:
     """
+    request_user = RequestUser()
+    print(request_user)
     return 'Secure access OK'
 
 
