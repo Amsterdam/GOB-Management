@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+service Jobs {
+	rpc StartImportJob(ImportJob) returns (JobResponse) {}
+	rpc StartPrepareJob(PrepareJob) returns (JobResponse) {}
+	rpc StartExportJob(ExportJob) returns (JobResponse) {}
+	rpc StartRelateJob(RelateJob) returns (JobResponse) {}
+	rpc StartExport_testJob(Export_testJob) returns (JobResponse) {}
+}
+
+message ImportJob {
+	string catalogue = 1;
+	string collection = 2;
+	string application = 3;
+}
+
+message PrepareJob {
+	string catalogue = 1;
+}
+
+message ExportJob {
+	string catalogue = 1;
+	string collection = 2;
+	string destination = 3;
+}
+
+message RelateJob {
+	string catalogue = 1;
+	string collection = 2;
+}
+
+message Export_testJob {
+	string catalogue = 1;
+}
+
+message JobResponse {
+	string status = 1;
+}
+
