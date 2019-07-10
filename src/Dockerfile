@@ -15,6 +15,10 @@ COPY gobmanagement gobmanagement
 # Copy deploy dir
 COPY deploy /deploy/
 
+# Build
+COPY build.sh /app
+RUN ./build.sh
+
 # Gatekeeper
 COPY ./keycloak-gatekeeper.latest keycloak-gatekeeper
 COPY ./gatekeeper.conf gatekeeper.conf

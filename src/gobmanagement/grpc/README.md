@@ -14,7 +14,8 @@ The ```services``` directory contains our implementation.
 
 ## Running codegen.py
 ```codegen.py``` only needs to be run after the a change is made in the
-start commands.
+start commands. The ```build.sh``` in the ```src``` root includes a call
+to this file.
 
 ## Other languages (such as JS)
 To generate skeleton code for other languages such as JavaScript, use
