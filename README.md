@@ -45,6 +45,13 @@ Or activate the previously created virtual environment
 ```bash
 source venv/bin/activate
 ```
+
+Build code (generate gRPC code)
+
+```
+cd src
+./build.sh
+```
     
 # Run
 

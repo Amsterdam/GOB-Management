@@ -34,7 +34,7 @@ class GRPCCodeGenerator:
         commands = StartCommands()
         response_message = 'JobResponse'
 
-        for _, command in commands.get_all().items():
+        for command in commands.get_all().values():
             args = [{'name': arg.name, 'type': 'string'} for arg in command.args]
             command_name = command.name.capitalize()
             message_name = f"{command_name}Job"
