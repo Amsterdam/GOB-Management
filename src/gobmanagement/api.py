@@ -1,3 +1,4 @@
+from flask import jsonify, request
 from flask_graphql import GraphQLView
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -8,6 +9,8 @@ from gobmanagement.database.base import db_session, session_scope
 from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
 from gobmanagement.auth import RequestUser
+
+from gobmanagement.grpc.services.jobs import JobsServicer
 
 
 def _health():
@@ -22,6 +25,37 @@ def _secure():
     request_user = RequestUser()
     print(request_user)
     return 'Secure access OK'
+
+
+@app.route(f'{API_BASE_PATH}/job/', methods=['POST'])
+def _job():
+    """
+    Create a new job
+
+    :return:
+    """
+    host = request.host
+    runs_locally = "127.0.0.1" in host
+    if not runs_locally:
+        # External call, check is the caller is authenticated and authorized
+        userid = request.headers.get('X-Auth-Userid')
+        roles = request.headers.get('X-Auth-Roles', '')
+        if userid is None:
+            # Check if the user is authenticated => 401 Unauthorized
+            return "Not logged in", 401
+        elif "gob_adm" not in roles:
+            # Check if the user is authorized => 403 Forbidden
+            return "Insufficient rights to start job", 403
+
+    data = request.get_json(silent=True)
+
+    jobs_services = JobsServicer()
+    try:
+        msg = jobs_services.publish_job(data['action'], data)
+        return jsonify(msg['header'])
+    except Exception as e:
+        # 400 Bad Request
+        return f"Job start failed: {str(e)}", 400
 
 
 def create_session_middleware(session_backend=session_scope):

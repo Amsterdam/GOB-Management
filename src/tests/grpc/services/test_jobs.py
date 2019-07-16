@@ -91,3 +91,11 @@ class TestJobsServicer(TestCase):
             'arg2': 'someval2',
             # arg3 is ignored, not set in request
         })
+
+        result = jobs_servicer._extract_args(start_command, {'arg1': 'someval1', 'arg2': 'someval2', 'arg3': None})
+
+        self.assertEqual(result, {
+            'arg1': 'someval1',
+            'arg2': 'someval2',
+            # arg3 is ignored, not set in request
+        })

@@ -29,7 +29,7 @@ class JobsServicer:
 
         return method
 
-    def start_job(self, name, request, context):
+    def publish_job(self, name, request):
         command = self.startcommands.get(name)
         args = self._extract_args(command, request)
         command.validate_arguments(args)
@@ -45,12 +45,16 @@ class JobsServicer:
             msg['workflow']['step_name'] = command.start_step
 
         publish(WORKFLOW_EXCHANGE, WORKFLOW_REQUEST_KEY, msg)
+        return msg
 
+    def start_job(self, name, request, context):
+        self.publish_job(name, request)
         return jobs_pb2.JobResponse(status='OK')
 
     def _extract_args(self, command: StartCommand, request):
         args = {}
         for arg in command.args:
-            if getattr(request, arg.name):
-                args[arg.name] = getattr(request, arg.name)
+            attr = request.get(arg.name) if isinstance(request, dict) else getattr(request, arg.name)
+            if attr is not None:
+                args[arg.name] = attr
         return args
