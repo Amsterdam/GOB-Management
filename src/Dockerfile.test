@@ -13,9 +13,14 @@ RUN rm -rf /app/src/gobcore/tests
 # Copy gobmanagement module
 COPY gobmanagement gobmanagement
 
+# Build
+COPY build.sh build.sh
+RUN ./build.sh
+
 # Copy tests
 COPY tests tests
 COPY .flake8 .flake8
+COPY .coveragerc .coveragerc
 COPY test.sh test.sh
 
 # Copy jenkins files
