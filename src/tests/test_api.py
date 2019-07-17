@@ -50,3 +50,26 @@ class TestJob(TestCase):
         mock_request.get_json = lambda silent: {}
         msg, status = api._job()
         assert status == 400
+
+class MockModel:
+
+    def get_catalogs(self):
+        return {
+            'catalog1': {
+                'collections': {
+                    'coll1': {},
+                    'coll2': {}
+                }
+            }
+        }
+
+class TestCatalogs(TestCase):
+
+    def setUp(self) -> None:
+        pass
+
+    @mock.patch('gobmanagement.api.GOBModel', MockModel)
+    @mock.patch('gobmanagement.api.jsonify', lambda x : x)
+    def test_catalogs(self):
+        result = api._catalogs();
+        self.assertEqual(result, ({'catalog1': ['coll1', 'coll2']}, 200, {'Content-Type': 'application/json'}))

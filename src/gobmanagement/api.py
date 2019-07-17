@@ -3,6 +3,8 @@ from flask_graphql import GraphQLView
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
+from gobcore.model import GOBModel
+
 from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH
 from gobmanagement.app import app
 from gobmanagement.database.base import db_session, session_scope
@@ -56,6 +58,18 @@ def _job():
     except Exception as e:
         # 400 Bad Request
         return f"Job start failed: {str(e)}", 400
+
+
+@app.route(f'{API_BASE_PATH}/catalogs/', methods=['GET'])
+def _catalogs():
+    model = GOBModel()
+    catalogs = model.get_catalogs()
+    result = {}
+    for catalog_name, catalog in catalogs.items():
+        result[catalog_name] = []
+        for entity_name, model in catalog['collections'].items():
+            result[catalog_name].append(entity_name)
+    return jsonify(result), 200, {'Content-Type': 'application/json'}
 
 
 def create_session_middleware(session_backend=session_scope):
