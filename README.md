@@ -16,12 +16,13 @@ docker-compose build
 docker-compose up &
 ```
 
-The API is exposed at port 8143
+The API is exposed at port 8143 (http://localhost:8143/gob_management/graphql/)
 
 ## Tests
 
 ```bash
-docker-compose run test
+docker-compose -f src/.jenkins/test/docker-compose.yml build
+docker-compose -f src/.jenkins/test/docker-compose.yml run --rm test
 ```
 
 # Local
@@ -46,7 +47,7 @@ Or activate the previously created virtual environment
 source venv/bin/activate
 ```
 
-Build code (generate gRPC code)
+Build gRPC code
 
 ```
 cd src
@@ -62,7 +63,7 @@ cd src
 python -m gobmanagement
 ```
 
-The API is exposed at port 5001
+The API is exposed at port 8143 (http://localhost:8143/gob_management/graphql/)
 
 ## Tests
 
