@@ -74,6 +74,16 @@ cd src
 sh test.sh
 ```
 
+# Security
+
+Access to GOB Management can be protected by using gatekeeper.
+
+The configuration variables can be stored in .env.
+An example configuration can be found in .env.example.
+
+Gatekeeper is bypassed for local development.
+To activate gatekeeper for local development please follow the directions specified in docker-compose.yml.
+
 # GraphQL
 
 GOB Management API provides a graphql endpoint on process logs.
