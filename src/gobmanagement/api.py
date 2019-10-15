@@ -14,6 +14,8 @@ from gobmanagement.auth import RequestUser
 
 from gobmanagement.grpc.services.jobs import JobsServicer
 
+from gobmanagement.message_broker.management import get_queues
+
 
 def _health():
     return 'Connectivity OK'
@@ -92,12 +94,18 @@ _graphql = GraphQLView.as_view(
             )
 
 
+def _queues():
+    queues, status_code = get_queues()
+    return jsonify(queues), status_code, {'Content-Type': 'application/json'}
+
+
 # Routes
 ROUTES = [
     # Health check URL
     ('/status/health/', _health),
     (f'{API_BASE_PATH}/secure/', _secure),
-    (f'{API_BASE_PATH}/graphql/', _graphql)
+    (f'{API_BASE_PATH}/graphql/', _graphql),
+    (f'{API_BASE_PATH}/queues/', _queues)
 ]
 
 for route, view_func in ROUTES:
