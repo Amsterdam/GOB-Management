@@ -289,12 +289,7 @@ JOIN (
     FROM   jobsteps
     GROUP BY jobid
 ) AS laststep ON laststep.jobid = job.id
-JOIN (
-    SELECT id,
-           name,
-           status
-    FROM   jobsteps
-) AS step ON step.id = laststep.stepid
+JOIN jobsteps step on step.id = laststep.stepid
 LEFT OUTER JOIN (
     SELECT msg.jobid AS jobid,
            inf.count AS infos,
