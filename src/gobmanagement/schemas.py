@@ -2,6 +2,8 @@ import graphene
 
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 
+from gobcore.status.heartbeat import STATUS_START, STATUS_SCHEDULED, STATUS_END
+
 from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
 
 from gobmanagement.database import get_last_logid
@@ -248,7 +250,9 @@ SELECT log.process_id                AS process_id,
        msg.warnings                  AS warnings,
        msg.errors                    AS errors,
        step.name                     AS step,
-       step.status                   AS status
+       case when step.start is null and step.end is null then '{STATUS_SCHEDULED}'
+            when step.start is not null and step.end is null then '{STATUS_START}'
+            else '{STATUS_END}' end AS status
 FROM jobs AS job
 JOIN (
     SELECT id,
@@ -285,12 +289,7 @@ JOIN (
     FROM   jobsteps
     GROUP BY jobid
 ) AS laststep ON laststep.jobid = job.id
-JOIN (
-    SELECT id,
-           name,
-           status
-    FROM   jobsteps
-) AS step ON step.id = laststep.stepid
+JOIN jobsteps step on step.id = laststep.stepid
 LEFT OUTER JOIN (
     SELECT msg.jobid AS jobid,
            inf.count AS infos,
