@@ -2,8 +2,6 @@ import graphene
 
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 
-from gobcore.status.heartbeat import STATUS_START, STATUS_SCHEDULED, STATUS_END
-
 from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
 
 from gobmanagement.database import get_last_logid
@@ -224,90 +222,61 @@ class Query(graphene.ObjectType):
         where = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else "True"
 
         query = f"""
-SELECT log.process_id                AS process_id,
-       job.id                        AS jobid,
-       jobinfo.duration              AS bruto_duration,
-       stepdurations.duration        AS netto_duration,
-       CASE WHEN jobinfo.time_ago <= '24 hours'::interval THEN ' 0 - 24 uur'
-            WHEN jobinfo.time_ago <= '48 hours'::interval THEN '24 - 48 uur'
-            WHEN jobinfo.time_ago <= '96 hours'::interval THEN '48 - 96 uur'
-                                                          ELSE 'Ouder'
-       END                           AS age_category,
-       date(job.start)               AS day,
-       log.name                      AS name,
-       log.source                    AS source,
-       log.applicatiON               AS application,
-       log.destinatiON               AS destination,
-       log.catalogue                 AS catalogue,
-       log.entity                    AS entity,
-       job.start                     AS starttime,
-       date_part('year', job.start)  AS startyear,
-       date_part('month', job.start) AS startmonth,
-       job.end                       AS endtime,
-       date_part('year', job.end)    AS endyear,
-       date_part('month', job.end)   AS endmonth,
-       msg.infos                     AS infos,
-       msg.warnings                  AS warnings,
-       msg.errors                    AS errors,
-       step.name                     AS step,
-       case when step.start is null and step.end is null then '{STATUS_SCHEDULED}'
-            when step.start is not null and step.end is null then '{STATUS_START}'
-            else '{STATUS_END}' end AS status
-FROM jobs AS job
-JOIN (
-    SELECT id,
-           jobs.end - jobs.start AS duration,
-           now() - jobs.start    AS time_ago
-    FROM jobs
-) as jobinfo ON jobinfo.id = job.id
-JOIN (
+SELECT
+    firstlog.process_id,
+    job.id                       AS jobid,
+    job.end - job.start          AS bruto_duration,
+    stepdurations.duration       AS netto_duration,
+    now() - job.start as time_ago,
+    CASE WHEN now() - job.start <= '24 hours'::interval THEN ' 0 - 24 uur'
+         WHEN now() - job.start <= '48 hours'::interval THEN '24 - 48 uur'
+         WHEN now() - job.start <= '96 hours'::interval THEN '48 - 96 uur'
+         ELSE 'Ouder'
+        END                           AS age_category,
+    date(job.start)               AS day,
+    firstlog.name                      AS name,
+    firstlog.source                    AS source,
+    firstlog.application               AS application,
+    firstlog.destination               AS destination,
+    firstlog.catalogue                 AS catalogue,
+    firstlog.entity                    AS entity,
+    job.start                     AS starttime,
+    date_part('year', job.start)  AS startyear,
+    date_part('month', job.start) AS startmonth,
+    job.end                       AS endtime,
+    date_part('year', job.end)    AS endyear,
+    date_part('month', job.end)   AS endmonth,
+    step.name                     AS step,
+    step.status                   AS status,
+    log.infos,
+    log.warnings,
+    log.errors
+FROM (
+    SELECT
+        sum(case when log.level = 'INFO' then 1 end) as infos,
+        sum(case when log.level = 'WARNING' then 1 end) as warnings,
+        sum(case when log.level = 'ERROR' then 1 end) as errors,
+        min(log.logid) as logid,
+        jobid
+    FROM logs log
+    WHERE log.timestamp >= now() - '{days_ago} days'::interval
+    GROUP BY log.jobid
+) log
+join logs firstlog on firstlog.logid = log.logid
+join jobs job ON job.id=log.jobid
+left join (
+    select jobid,
+           max(id) as stepid
+    from jobsteps
+    group by jobid
+) as laststep on laststep.jobid = log.jobid
+left join jobsteps step on step.id = laststep.stepid
+LEFT JOIN (
     SELECT jobid,
            SUM(jobsteps.end - jobsteps.start) AS duration
     FROM jobsteps
     GROUP BY jobid
 ) as stepdurations ON stepdurations.jobid = job.id
-JOIN (
-    SELECT jobid      AS jobid,
-           min(logid) AS logid
-    FROM   logs
-    GROUP BY jobid
-) AS firstlog ON firstlog.jobid = job.id
-JOIN (
-    SELECT logid,
-           name,
-           process_id,
-           application,
-           source,
-           destination,
-           catalogue,
-           entity
-    FROM   logs
-) AS log ON log.logid = firstlog.logid
-JOIN (
-    SELECT jobid   AS jobid,
-           max(id) AS stepid
-    FROM   jobsteps
-    GROUP BY jobid
-) AS laststep ON laststep.jobid = job.id
-JOIN jobsteps step on step.id = laststep.stepid
-LEFT OUTER JOIN (
-    SELECT msg.jobid AS jobid,
-           inf.count AS infos,
-           wrn.count AS warnings,
-           err.count AS errors
-    FROM (
-             SELECT jobid,
-                    level,
-                    count(*)
-             FROM logs
-             GROUP BY jobid, level
-         ) AS msg
-             left outer JOIN logs inf ON msg.jobid = inf.jobid AND msg.level = inf.level AND inf.level = 'INFO'
-             left outer JOIN logs wrn ON msg.jobid = wrn.jobid AND msg.level = wrn.level AND wrn.level = 'WARNING'
-             left outer JOIN logs err ON msg.jobid = err.jobid AND msg.level = err.level AND err.level = 'ERROR'
-    GROUP BY msg.jobid
-) AS msg ON msg.jobid = job.id
-WHERE jobinfo.time_ago <= '{days_ago} days'::interval
 """
 
         statement = f"""
