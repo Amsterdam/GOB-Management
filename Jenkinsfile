@@ -17,7 +17,7 @@ def tryStep(String message, Closure block, Closure tearDown = null) {
 }
 
 
-node {
+node('GOBBUILD') {
     stage("Checkout") {
         checkout scm
     }
@@ -37,8 +37,6 @@ node {
             docker.withRegistry('https://repo.data.amsterdam.nl','docker-registry') {
             def image = docker.build("datapunt/gob_management_api:${env.BUILD_NUMBER}",
                     "--no-cache " +
-                    "--build-arg http_proxy=${JENKINS_HTTP_PROXY_STRING} " +
-                    "--build-arg https_proxy=${JENKINS_HTTP_PROXY_STRING} " +
                     "--shm-size 1G " +
                     "--build-arg BUILD_ENV=acc" +
                     " src")
@@ -54,7 +52,7 @@ String BRANCH = "${env.BRANCH_NAME}"
 
 if (BRANCH == "develop") {
 
-    node {
+    node('GOBBUILD') {
         stage('Push develop image') {
             tryStep "image tagging", {
                 docker.withRegistry('https://repo.data.amsterdam.nl','docker-registry') {
@@ -70,7 +68,7 @@ if (BRANCH == "develop") {
 
 if (BRANCH == "master") {
 
-    node {
+    node('GOBBUILD') {
         stage('Push acceptance image') {
             tryStep "image tagging", {
                 docker.withRegistry('https://repo.data.amsterdam.nl','docker-registry') {
@@ -82,7 +80,7 @@ if (BRANCH == "master") {
         }
     }
 
-    node {
+    node('GOBBUILD') {
         stage("Deploy to ACC") {
             tryStep "deployment", {
                 build job: 'Subtask_Openstack_Playbook',
