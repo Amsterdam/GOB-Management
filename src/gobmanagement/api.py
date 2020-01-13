@@ -31,7 +31,6 @@ def _secure():
     return 'Secure access OK'
 
 
-@app.route(f'{API_BASE_PATH}/job/', methods=['POST'])
 def _job():
     """
     Create a new job
@@ -62,7 +61,6 @@ def _job():
         return f"Job start failed: {str(e)}", 400
 
 
-@app.route(f'{API_BASE_PATH}/catalogs/', methods=['GET'])
 def _catalogs():
     model = GOBModel()
     catalogs = model.get_catalogs()
@@ -102,14 +100,16 @@ def _queues():
 # Routes
 ROUTES = [
     # Health check URL
-    ('/status/health/', _health),
-    (f'{API_BASE_PATH}/secure/', _secure),
-    (f'{API_BASE_PATH}/graphql/', _graphql),
-    (f'{API_BASE_PATH}/queues/', _queues)
+    ('/status/health/', _health, ['GET']),
+    (f'{API_BASE_PATH}/job/', _job, ['POST']),
+    (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
+    (f'{API_BASE_PATH}/secure/', _secure, ['GET']),
+    (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
+    (f'{API_BASE_PATH}/queues/', _queues, ['GET'])
 ]
 
-for route, view_func in ROUTES:
-    app.route(rule=route)(view_func)
+for route, view_func, methods in ROUTES:
+    app.route(rule=route, methods=methods)(view_func)
 
 socketio = SocketIO(app,
                     path=f"{API_BASE_PATH}/socket.io",
