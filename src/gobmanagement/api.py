@@ -58,7 +58,9 @@ def _job(job_id=None):
 
 def _start_job():
     """
-    Start a job
+    Start a new job
+
+    The job parameters are contained in the request
     :return:
     """
     data = request.get_json(silent=True)
@@ -73,6 +75,12 @@ def _start_job():
 
 
 def _remove_job(job_id):
+    """
+    Removes a job
+
+    :param job_id:
+    :return:
+    """
     jobs_services = JobsServicer()
     return jsonify(jobs_services.remove_job(job_id))
 
@@ -114,6 +122,12 @@ def _queues():
 
 
 def _queue(queue_name):
+    """
+    Purge the queue with the specified name
+
+    :param queue_name:
+    :return:
+    """
     assert request.method == 'DELETE'
     result, status_code = purge_queue(queue_name)
     return jsonify(result), status_code, {'Content-Type': 'application/json'}
