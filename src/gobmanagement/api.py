@@ -14,7 +14,7 @@ from gobmanagement.auth import RequestUser
 
 from gobmanagement.grpc.services.jobs import JobsServicer
 
-from gobmanagement.message_broker.management import get_queues
+from gobmanagement.message_broker.management import get_queues, purge_queue
 
 
 def _health():
@@ -97,6 +97,12 @@ def _queues():
     return jsonify(queues), status_code, {'Content-Type': 'application/json'}
 
 
+def _queue(queue_name):
+    assert request.method == 'DELETE'
+    result, status_code = purge_queue(queue_name)
+    return jsonify(result), status_code, {'Content-Type': 'application/json'}
+
+
 # Routes
 ROUTES = [
     # Health check URL
@@ -105,7 +111,8 @@ ROUTES = [
     (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
     (f'{API_BASE_PATH}/secure/', _secure, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
-    (f'{API_BASE_PATH}/queues/', _queues, ['GET'])
+    (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
+    (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE'])
 ]
 
 for route, view_func, methods in ROUTES:
