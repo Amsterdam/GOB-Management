@@ -31,7 +31,7 @@ def _secure():
     return 'Secure access OK'
 
 
-def _job():
+def _job(job_id=None):
     """
     Create a new job
 
@@ -50,6 +50,17 @@ def _job():
             # Check if the user is authorized => 403 Forbidden
             return "Insufficient rights to start job", 403
 
+    if request.method == 'GET':
+        return _start_job()
+    elif request.method == 'DELETE':
+        return _remove_job(job_id)
+
+
+def _start_job():
+    """
+    Start a job
+    :return:
+    """
     data = request.get_json(silent=True)
 
     jobs_services = JobsServicer()
@@ -59,6 +70,11 @@ def _job():
     except Exception as e:
         # 400 Bad Request
         return f"Job start failed: {str(e)}", 400
+
+
+def _remove_job(job_id):
+    jobs_services = JobsServicer()
+    return jsonify(jobs_services.remove_job(job_id))
 
 
 def _catalogs():
@@ -108,6 +124,7 @@ ROUTES = [
     # Health check URL
     ('/status/health/', _health, ['GET']),
     (f'{API_BASE_PATH}/job/', _job, ['POST']),
+    (f'{API_BASE_PATH}/job/<job_id>', _job, ['DELETE']),
     (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
     (f'{API_BASE_PATH}/secure/', _secure, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),

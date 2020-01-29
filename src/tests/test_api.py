@@ -25,6 +25,7 @@ class MockedRequest:
     def __init__(self):
         self.host = "any host"
         self.headers = {}
+        self.method = 'GET'
 
 mock_request = MockedRequest()
 
