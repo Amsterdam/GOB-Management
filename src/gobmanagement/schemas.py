@@ -100,6 +100,7 @@ class Job(graphene.ObjectType):
     errors = graphene.Int(description="Error logs within a job")
     step = graphene.String(description="Last step")
     status = graphene.String(description="Status of last step")
+    user = graphene.String(description="User or process that started the job")
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -147,6 +148,7 @@ class JobInfo(graphene.ObjectType):
     end = graphene.DateTime()
     duration = Timedelta()
     status = graphene.String()
+    user = graphene.String()
 
     steps = graphene.List(StepInfo)
 
@@ -248,6 +250,7 @@ SELECT
     date_part('month', job.end)   AS endmonth,
     step.name                     AS step,
     step.status                   AS status,
+    job.user                      AS user,
     log.infos,
     log.warnings,
     log.errors
