@@ -14,7 +14,7 @@ from gobmanagement.auth import RequestUser
 
 from gobmanagement.grpc.services.jobs import JobsServicer
 
-from gobmanagement.message_broker.management import get_queues
+from gobmanagement.message_broker.management import get_queues, purge_queue
 
 
 def _health():
@@ -31,7 +31,7 @@ def _secure():
     return 'Secure access OK'
 
 
-def _job():
+def _job(job_id=None):
     """
     Create a new job
 
@@ -50,6 +50,19 @@ def _job():
             # Check if the user is authorized => 403 Forbidden
             return "Insufficient rights to start job", 403
 
+    if request.method == 'POST':
+        return _start_job()
+    elif request.method == 'DELETE':
+        return _remove_job(job_id)
+
+
+def _start_job():
+    """
+    Start a new job
+
+    The job parameters are contained in the request
+    :return:
+    """
     data = request.get_json(silent=True)
 
     jobs_services = JobsServicer()
@@ -59,6 +72,17 @@ def _job():
     except Exception as e:
         # 400 Bad Request
         return f"Job start failed: {str(e)}", 400
+
+
+def _remove_job(job_id):
+    """
+    Removes a job
+
+    :param job_id:
+    :return:
+    """
+    jobs_services = JobsServicer()
+    return jsonify(jobs_services.remove_job(job_id))
 
 
 def _catalogs():
@@ -97,15 +121,29 @@ def _queues():
     return jsonify(queues), status_code, {'Content-Type': 'application/json'}
 
 
+def _queue(queue_name):
+    """
+    Purge the queue with the specified name
+
+    :param queue_name:
+    :return:
+    """
+    assert request.method == 'DELETE'
+    result, status_code = purge_queue(queue_name)
+    return jsonify(result), status_code, {'Content-Type': 'application/json'}
+
+
 # Routes
 ROUTES = [
     # Health check URL
     ('/status/health/', _health, ['GET']),
     (f'{API_BASE_PATH}/job/', _job, ['POST']),
+    (f'{API_BASE_PATH}/job/<job_id>', _job, ['DELETE']),
     (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
     (f'{API_BASE_PATH}/secure/', _secure, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
-    (f'{API_BASE_PATH}/queues/', _queues, ['GET'])
+    (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
+    (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE'])
 ]
 
 for route, view_func, methods in ROUTES:
