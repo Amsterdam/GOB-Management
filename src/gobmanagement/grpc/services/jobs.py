@@ -1,4 +1,5 @@
 from gobmanagement.grpc.out import jobs_pb2
+from gobmanagement.database import remove_job
 
 from gobcore.workflow.start_commands import StartCommands, StartCommand
 from gobcore.message_broker import publish
@@ -50,6 +51,9 @@ class JobsServicer:
     def start_job(self, name, request, context):
         self.publish_job(name, request)
         return jobs_pb2.JobResponse(status='OK')
+
+    def remove_job(self, job_id):
+        return remove_job(job_id)
 
     def _extract_args(self, command: StartCommand, request):
         args = {}
