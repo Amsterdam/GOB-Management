@@ -50,7 +50,7 @@ def _job(job_id=None):
             # Check if the user is authorized => 403 Forbidden
             return "Insufficient rights to start job", 403
 
-    if request.method == 'GET':
+    if request.method == 'POST':
         return _start_job()
     elif request.method == 'DELETE':
         return _remove_job(job_id)
