@@ -57,8 +57,8 @@ class JobsServicer:
 
     def _extract_args(self, command: StartCommand, request):
         args = {}
-        for arg in command.args:
-            attr = request.get(arg.name) if isinstance(request, dict) else getattr(request, arg.name)
+        for arg_name in [arg.name for arg in command.args] + ['user']:
+            attr = request.get(arg_name) if isinstance(request, dict) else getattr(request, arg_name, None)
             if attr is not None:
-                args[arg.name] = attr
+                args[arg_name] = attr
         return args
