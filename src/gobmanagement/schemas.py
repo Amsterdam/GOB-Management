@@ -1,5 +1,6 @@
 import graphene
 
+from sqlalchemy import text
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 
 from gobcore.model.sa.management import Log, Service as ServiceModel, ServiceTask as ServiceTaskModel
@@ -184,7 +185,8 @@ class Query(graphene.ObjectType):
                          catalogue=graphene.String(),
                          entity=graphene.String(),
                          startyear=graphene.String(),
-                         startmonth=graphene.String())
+                         startmonth=graphene.String(),
+                         search=graphene.String())
 
     jobinfo = graphene.List(JobInfo, jobid=graphene.Int())
 
@@ -220,6 +222,12 @@ class Query(graphene.ObjectType):
         if "days_ago" in kwargs:
             days_ago = int(kwargs["days_ago"])
             del kwargs["days_ago"]
+
+        search = "true"
+        if "search" in kwargs:
+            search = kwargs["search"].lower()
+            search = f"lower(log.msg) LIKE '%{search}%'"
+            del kwargs["search"]
 
         where = " AND ".join([f"{key} = '{value}'" for key, value in kwargs.items()]) if kwargs else "True"
 
@@ -266,7 +274,7 @@ FROM (
         min(log.logid) as logid,
         jobid
     FROM logs log
-    WHERE log.timestamp >= now() - '{days_ago} days'::interval
+    WHERE log.timestamp >= now() - '{days_ago} days'::interval AND {search}
     GROUP BY log.jobid
 ) log
 join logs firstlog on firstlog.logid = log.logid
@@ -293,6 +301,7 @@ AS     result
 WHERE  {where}
 ORDER BY starttime DESC
 """
+        statement = text(statement)
 
         # Response will change when a new log has become available
         with session_scope(True) as session:
