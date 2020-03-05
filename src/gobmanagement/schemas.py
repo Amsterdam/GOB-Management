@@ -234,14 +234,14 @@ SELECT
          WHEN now() - job.start <= '48 hours'::interval THEN '24 - 48 uur'
          WHEN now() - job.start <= '96 hours'::interval THEN '48 - 96 uur'
          ELSE 'Ouder'
-        END                           AS age_category,
+        END                       AS age_category,
     date(job.start)               AS day,
-    firstlog.name                      AS name,
-    firstlog.source                    AS source,
-    firstlog.application               AS application,
-    firstlog.destination               AS destination,
-    firstlog.catalogue                 AS catalogue,
-    firstlog.entity                    AS entity,
+    firstlog.name                 AS name,
+    firstlog.source               AS source,
+    firstlog.application          AS application,
+    firstlog.destination          AS destination,
+    firstlog.catalogue            AS catalogue,
+    firstlog.entity               AS entity,
     job.start                     AS starttime,
     date_part('year', job.start)  AS startyear,
     date_part('month', job.start) AS startmonth,
@@ -249,7 +249,11 @@ SELECT
     date_part('year', job.end)    AS endyear,
     date_part('month', job.end)   AS endmonth,
     step.name                     AS step,
-    step.status                   AS status,
+    CASE WHEN
+         job.status = 'ended'
+         THEN job.status
+         ELSE step.status
+         END                      AS status,
     job.user                      AS user,
     log.infos,
     log.warnings,
