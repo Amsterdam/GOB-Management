@@ -51,7 +51,8 @@ class LogAttribute:
     destination = graphene.String(description="The destination for the process")
     catalogue = graphene.String(description="The catalogue that is handled by the process")
     entity = graphene.String(description="The entity that is handled by the process")
-    level = graphene.String(description="The log level (CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET)")
+    level = graphene.String(description="The log level (CRITICAL, ERROR, WARNING, INFO, "
+                                        "DATAINFO, DATAWARNING, DATAERROR,  DEBUG, NOTSET)")
     name = graphene.String(description="The name of the process step that generated the log entry")
     msgid = graphene.String(description="The message id for errors and warnings (allows grouping)")
     msg = graphene.String(description="A (short) description of the log entry")
@@ -99,6 +100,9 @@ class Job(graphene.ObjectType):
     infos = graphene.Int(description="Info logs within a job")
     warnings = graphene.Int(description="Warning logs within a job")
     errors = graphene.Int(description="Error logs within a job")
+    datainfos = graphene.Int(description="Data info logs within a job")
+    datawarnings = graphene.Int(description="Data warning logs within a job")
+    dataerrors = graphene.Int(description="Data error logs within a job")
     step = graphene.String(description="Last step")
     status = graphene.String(description="Status of last step")
     user = graphene.String(description="User or process that started the job")
@@ -265,12 +269,18 @@ SELECT
     job.user                      AS user,
     log.infos,
     log.warnings,
-    log.errors
+    log.errors,
+    log.datainfos,
+    log.datawarnings,
+    log.dataerrors
 FROM (
     SELECT
         sum(case when log.level = 'INFO' then 1 end) as infos,
         sum(case when log.level = 'WARNING' then 1 end) as warnings,
         sum(case when log.level = 'ERROR' then 1 end) as errors,
+        sum(case when log.level = 'DATAINFO' then 1 end) as datainfos,
+        sum(case when log.level = 'DATAWARNING' then 1 end) as datawarnings,
+        sum(case when log.level = 'DATAERROR' then 1 end) as dataerrors,
         min(log.logid) as logid,
         jobid
     FROM logs log
