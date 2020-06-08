@@ -1,4 +1,4 @@
-FROM amsterdam/python
+FROM amsterdam/python:3.7-buster
 MAINTAINER datapunt@amsterdam.nl
 
 # Install gobmanagement service in /app folder
