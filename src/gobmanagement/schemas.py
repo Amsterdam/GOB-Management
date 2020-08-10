@@ -95,6 +95,7 @@ class Job(graphene.ObjectType):
     destination = graphene.String(description="Destination for the job")
     catalogue = graphene.String(description="Catalogue that is handled by the job")
     entity = graphene.String(description="Entity that is handled by the job")
+    attribute = graphene.String(description="Attribute that is handled by the job")
     starttime = graphene.DateTime(description="Time when the job was started")
     endtime = graphene.String(description="Time when the job has ended")
     infos = graphene.Int(description="Info logs within a job")
@@ -267,6 +268,7 @@ SELECT
          ELSE step.status
          END                      AS status,
     job.user                      AS user,
+    job.attribute                 AS attribute,
     log.infos,
     log.warnings,
     log.errors,
