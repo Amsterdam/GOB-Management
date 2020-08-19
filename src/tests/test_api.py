@@ -9,6 +9,7 @@ class MockedRequest:
         self.headers = {}
         self.method = 'POST'
 
+
 mock_request = MockedRequest()
 
 class TestJob(TestCase):
@@ -33,6 +34,51 @@ class TestJob(TestCase):
         mock_request.get_json = lambda silent: {}
         msg, status = api._job()
         assert status == 400
+
+    @mock.patch('gobmanagement.api.request')
+    @mock.patch('gobmanagement.api.JobsServicer')
+    @mock.patch('gobmanagement.api.jsonify', lambda x: x)
+    def test_start_job(self, mock_servicer, mock_request):
+        mock_request.get_json.return_value = {
+            'action': 'some_action',
+            'catalogue': 'somecat',
+            'collection': None,
+            'destination': 'dest',
+            'product': 'product_8402',
+            'attribute': 'attr',
+            'mode': 'modde',
+            'user': 'Some User (with parentheses)'
+        }
+
+        api._start_job()
+        mock_servicer.return_value.publish_job.assert_called_with('some_action', mock_request.get_json.return_value)
+
+        # Mismatching properties
+        mock_request.get_json.return_value = {
+            'invalidkey': 'val'
+        }
+        res = api._start_job()
+        self.assertEqual(({'errors': ['Unexpected properties received: invalidkey']}, 400), res)
+
+        # Failing validation
+        mock_request.get_json.return_value = {
+            'action': 'some action',
+            'catalogue': 'some cat',
+            'collection': 'some coll',
+            'destination': 'de-st',
+            'product': 'prod',
+            'attribute': 'attr',
+            'mode': 'mode',
+            'user': 'Some User (with-parentheses and hyphen)'
+        }
+        res = api._start_job()
+        self.assertEqual(({'errors': [
+            'Invalid format for action',
+            'Invalid format for catalogue',
+            'Invalid format for collection',
+            'Invalid format for destination',
+            'Invalid format for user'
+        ]}, 400), res)
 
 class MockModel:
 

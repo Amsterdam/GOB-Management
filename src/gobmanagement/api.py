@@ -1,3 +1,5 @@
+import re
+
 from flask import jsonify, request
 from flask_graphql import GraphQLView
 from flask_cors import CORS
@@ -56,6 +58,30 @@ def _job(job_id=None):
         return _remove_job(job_id)
 
 
+def _validate_request(valid_properties, data):
+    """Checks if data confirms to valid_properties.
+
+    Valid_properties is a dict with property: regex pairs. Only checks if the data matches the regex when the property
+    is not None. None is always valid.
+
+    Also checks if data does not contain any unexpected properties.
+
+    :param valid_properties:
+    :param data:
+    :return:
+    """
+    diff = set(data.keys()) - set(valid_properties.keys())
+
+    if diff:
+        return [f"Unexpected properties received: {', '.join(diff)}"]
+
+    errors = []
+    for property, value in data.items():
+        if value is not None and not valid_properties[property].match(value):
+            errors.append(f"Invalid format for {property}")
+    return errors
+
+
 def _start_job():
     """
     Start a new job
@@ -63,7 +89,17 @@ def _start_job():
     The job parameters are contained in the request
     :return:
     """
+    alphanumeric = re.compile(r'^\w+$')
+    valid_properties = {key: alphanumeric for key in [
+        'action', 'catalogue', 'collection', 'destination', 'product', 'attribute', 'mode'
+    ]}
+    valid_properties['user'] = re.compile(r'^[\w() ]+$')
+
     data = request.get_json(silent=True)
+    errors = _validate_request(valid_properties, data)
+
+    if errors:
+        return jsonify({'errors': errors}), 400
 
     jobs_services = JobsServicer()
     try:
