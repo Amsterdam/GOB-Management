@@ -9,7 +9,7 @@ from gobmanagement.database import get_last_logid
 from gobmanagement.database.base import session_scope
 from gobmanagement.database.base import db_session, engine
 
-from gobmanagement.fields import FilterConnectionField
+from gobmanagement.fields import LogFilterConnectionField
 from gobmanagement.scalars import Timedelta
 from gobmanagement.cache import ResolveCache
 
@@ -169,13 +169,13 @@ class JobInfo(graphene.ObjectType):
 class Query(graphene.ObjectType):
     """Query objects for GraphQL API."""
     node = graphene.relay.Node.Field()
-    logs = FilterConnectionField(LogConnection,
-                                 process_id=graphene.String(),
-                                 jobid=graphene.Int(),
-                                 stepid=graphene.Int(),
-                                 source=graphene.String(),
-                                 catalogue=graphene.String(),
-                                 entity=graphene.String())
+    logs = LogFilterConnectionField(LogConnection,
+                                    process_id=graphene.String(),
+                                    jobid=graphene.Int(),
+                                    stepid=graphene.Int(),
+                                    source=graphene.String(),
+                                    catalogue=graphene.String(),
+                                    entity=graphene.String())
 
     source_entities = graphene.List(SourceEntity)
 
