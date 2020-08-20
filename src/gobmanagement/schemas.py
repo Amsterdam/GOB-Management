@@ -272,17 +272,14 @@ SELECT
     log.infos,
     log.warnings,
     log.errors,
-    log.datainfos,
-    log.datawarnings,
-    log.dataerrors
+    COALESCE(job.log_counts->>'data_info', '0')::int     AS datainfos,
+    COALESCE(job.log_counts->>'data_warning', '0')::int  AS datawarnings,
+    COALESCE(job.log_counts->>'data_error', '0')::int    AS dataerrors
 FROM (
     SELECT
         sum(case when log.level = 'INFO' then 1 end) as infos,
         sum(case when log.level = 'WARNING' then 1 end) as warnings,
         sum(case when log.level = 'ERROR' then 1 end) as errors,
-        sum(case when log.level = 'DATAINFO' then 1 end) as datainfos,
-        sum(case when log.level = 'DATAWARNING' then 1 end) as datawarnings,
-        sum(case when log.level = 'DATAERROR' then 1 end) as dataerrors,
         min(log.logid) as logid,
         jobid
     FROM logs log
