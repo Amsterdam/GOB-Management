@@ -47,7 +47,7 @@ class TestJob(TestCase):
             'product': 'product_8402',
             'attribute': 'attr',
             'mode': 'modde',
-            'user': 'Some User (with parentheses)'
+            'user': 'Some User (with parentheses and dot .)'
         }
 
         api._start_job()
