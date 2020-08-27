@@ -45,6 +45,7 @@ class TestJob(TestCase):
             'collection': None,
             'destination': 'dest',
             'product': 'product_8402',
+            'application': 'Application',
             'attribute': 'attr',
             'mode': 'modde',
             'user': 'Some User (with parentheses and dot .)'
@@ -67,6 +68,7 @@ class TestJob(TestCase):
             'collection': 'some coll',
             'destination': 'de-st',
             'product': 'prod',
+            'application': 'app-lication',
             'attribute': 'attr',
             'mode': 'mode',
             'user': 'Some User (with-parentheses and hyphen)'
@@ -77,6 +79,7 @@ class TestJob(TestCase):
             'Invalid format for catalogue',
             'Invalid format for collection',
             'Invalid format for destination',
+            'Invalid format for application',
             'Invalid format for user'
         ]}, 400), res)
 
