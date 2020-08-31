@@ -91,7 +91,7 @@ def _start_job():
     """
     alphanumeric = re.compile(r'^\w+$')
     valid_properties = {key: alphanumeric for key in [
-        'action', 'catalogue', 'collection', 'destination', 'product', 'attribute', 'mode'
+        'action', 'catalogue', 'collection', 'destination', 'product', 'attribute', 'mode', 'application',
     ]}
     valid_properties['user'] = re.compile(r'^[\w(). ]+$')
 
