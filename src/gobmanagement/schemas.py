@@ -166,6 +166,25 @@ class JobInfo(graphene.ObjectType):
         interfaces = (graphene.relay.Node,)
 
 
+class JobDetails(graphene.ObjectType):
+    process_id = graphene.String()
+    jobid = graphene.Int()
+    name = graphene.String()
+    type = graphene.String()
+    args = graphene.String()
+    start = graphene.DateTime()
+    end = graphene.DateTime()
+    duration = Timedelta()
+    status = graphene.String()
+    user = graphene.String()
+
+    def __init__(self, job):
+        self.__dict__.update(job)
+
+    class Meta:
+        interfaces = (graphene.relay.Node,)
+
+
 class Query(graphene.ObjectType):
     """Query objects for GraphQL API."""
     node = graphene.relay.Node.Field()
@@ -195,6 +214,8 @@ class Query(graphene.ObjectType):
 
     jobinfo = graphene.List(JobInfo, jobid=graphene.Int())
 
+    processjobs = graphene.List(JobDetails, process_id=graphene.String())
+
     _resolve_cache = ResolveCache()
 
     def resolve_jobinfo(self, _, jobid):
@@ -217,6 +238,15 @@ class Query(graphene.ObjectType):
         steps = [dict(step) for step in engine.execute(statement)]
 
         return [JobInfo(job, steps)]
+
+    def resolve_processjobs(self, _, process_id):
+        statement = f"""
+        SELECT *, id AS jobid, jobs.end - jobs.start AS duration
+        FROM jobs
+        WHERE process_id = '{process_id}'
+"""
+        jobs = [dict(job) for job in engine.execute(statement)]
+        return [JobDetails(job) for job in jobs]
 
     def resolve_source_entities(self, _):
         results = db_session.query(Log).distinct(Log.source, Log.catalogue, Log.entity).all()
