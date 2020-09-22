@@ -6,10 +6,13 @@ from flask_cors import CORS
 from flask_socketio import SocketIO
 
 from gobcore.model import GOBModel
+from gobcore.message_broker.notifications import NOTIFY_EXCHANGE
+from gobcore.message_broker.config import WORKFLOW_QUEUE
 
 from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH
 from gobmanagement.app import app
 from gobmanagement.database.base import db_session
+from gobmanagement.database import get_process_state
 from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
 from gobmanagement.auth import RequestUser
@@ -141,6 +144,38 @@ _graphql = GraphQLView.as_view(
             )
 
 
+def _process_state(process_id):
+    """
+    Returns the state of a process as a list of jobs {id, status}
+
+    This is a whitelisted endpoint. Only the most limited amount of information is returned
+
+    :param process_id:
+    :return:
+    """
+    state = get_process_state(process_id)
+    return jsonify(state)
+
+
+def _workflow_state():
+    """
+    Return the workflow state as a list of queues {name, #messages_pending}
+
+    Only the queues that start workflows are taken into account
+
+    This is a whitelisted endpoint. Only the most limited amount of information is returned
+
+    :return:
+    """
+    workflow_queues = [NOTIFY_EXCHANGE, WORKFLOW_QUEUE]
+    queues, _ = get_queues()
+    state = [{
+        'name': queue['name'],
+        'messages_unacknowledged': queue['messages_unacknowledged']
+    } for queue in [queue for name in workflow_queues for queue in queues if queue['name'].startswith(name)]]
+    return jsonify(state)
+
+
 def _queues():
     queues, status_code = get_queues()
     return jsonify(queues), status_code, {'Content-Type': 'application/json'}
@@ -168,6 +203,8 @@ ROUTES = [
     (f'{API_BASE_PATH}/secure/', _secure, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
     (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
+    (f'{API_BASE_PATH}/state/process/<process_id>', _process_state, ['GET']),
+    (f'{API_BASE_PATH}/state/workflow/', _workflow_state, ['GET']),
     (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE'])
 ]
 
