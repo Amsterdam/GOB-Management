@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from gobmanagement.database.base import session_scope
 
@@ -54,3 +54,20 @@ COMMIT;
         result = session.execute(stmt)
     result.close()
     return unfinished_jobs()
+
+
+def get_process_state(process_id):
+    """
+    Returns the state of a process as a list of jobs {id, status}
+
+    :param process_id:
+    :return:
+    """
+
+    # Use query parameters to protect the query against SQL injection
+    stmt = text("SELECT id, status FROM jobs WHERE process_id =:process_id").bindparams(process_id=process_id)
+    with session_scope(True) as session:
+        result = session.execute(stmt)
+    process_state = [dict(row) for row in result.fetchall()]
+    result.close()
+    return process_state
