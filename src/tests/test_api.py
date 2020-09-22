@@ -129,3 +129,48 @@ class TestQueues(TestCase):
             mock_request.method = method
             with self.assertRaises(AssertionError):
                 api._queue('any queue name')
+
+class TestState(TestCase):
+
+    @mock.patch('gobmanagement.api.jsonify')
+    @mock.patch('gobmanagement.api.get_process_state')
+    def test_process_state(self, mock_get_process_state, mock_jsonify):
+        result = api._process_state("any process id")
+        mock_jsonify.assert_called_with(mock_get_process_state.return_value)
+        self.assertEqual(result, mock_jsonify.return_value)
+
+    @mock.patch('gobmanagement.api.jsonify')
+    @mock.patch('gobmanagement.api.get_queues')
+    def test_workflow_state(self, mock_queues, mock_jsonify):
+        from gobcore.message_broker.notifications import NOTIFY_EXCHANGE
+        from gobcore.message_broker.config import WORKFLOW_QUEUE
+
+        queues = [
+            {
+                'name': 'q1',
+                'messages_unacknowledged': 0,
+                'x': 0
+            },
+            {
+                'name': NOTIFY_EXCHANGE,
+                'messages_unacknowledged': 1,
+                'x': 1
+            },
+            {
+                'name': f'{NOTIFY_EXCHANGE}.something more',
+                'messages_unacknowledged': 2,
+                'x': 2
+            },
+            {
+                'name': WORKFLOW_QUEUE,
+                'messages_unacknowledged': 3,
+                'x': 3
+            },
+        ]
+        mock_queues.return_value = queues, None
+        result = api._workflow_state()
+        mock_jsonify.assert_called_with([{
+            'name': queue['name'],
+            'messages_unacknowledged': queue['messages_unacknowledged']
+        } for queue in queues[1:]])
+        self.assertEqual(result, mock_jsonify.return_value)
