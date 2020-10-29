@@ -16,7 +16,7 @@ engine = create_engine(db_uri)
 Base.metadata.bind = engine  # Bind engine to metadata of the base class
 
 # Create database session object
-maker = sessionmaker(bind=engine, expire_on_commit=False)
+maker = sessionmaker(bind=engine, expire_on_commit=False, autocommit=True)
 Session = scoped_session(maker)
 db_session = Session  # should not be used
 Base.query = db_session.query_property()  # Used by graphql to execute queries
