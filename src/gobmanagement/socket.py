@@ -36,7 +36,7 @@ class LogBroadcaster():
         """
         self._clients += 1
         self._start_broadcasts()
-        print(f"Client connected", self._clients)
+        print("Client connected", self._clients)
 
     def on_disconnect(self):
         """On disconnect of a new client

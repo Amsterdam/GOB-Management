@@ -12,6 +12,7 @@ exclude=.git,
         tests,
         scripts,
         */settings_commons.py,
-        gobmanagement/grpc/out/*
+        gobmanagement/grpc/out/*,
+        src/gobcore/*
 max-complexity=6
 max-line-length = 119

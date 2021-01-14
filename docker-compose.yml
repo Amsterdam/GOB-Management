@@ -5,11 +5,11 @@ services:
   gobmanagement:
     build: src
     ports:
-      # To use gatekeeper:
+      # To use oauth2-proxy:
       #   Set port to 8000
-      #   Set secure-cookie: false in gatekeeper.conf
       #   Set the variables in .env
-      # Use port 8001 to bypass gatekeeper locally
+      #   Set cookie_secure in oauth2-proxy.cfg to false
+      # Use port 8001 to bypass the OAuth2 Proxy locally
       - "8143:8001"
     container_name: gobmanagement
     environment:
@@ -17,19 +17,17 @@ services:
       GOB_SHARED_DIR: /app/shared
       DATABASE_PORT_OVERRIDE: 5432
       DATABASE_HOST_OVERRIDE: management_database
-      # Gatekeeper listens on port 8000 and serves as a proxy for UWSGI
+      # Oauth2 proxy listens on port 8000 and serves as a proxy for UWSGI
       UWSGI_HTTP: ":8001"
       UWSGI_MODULE: "gobmanagement.wsgi"
       UWSGI_CALLABLE: "application"
       UWSGI_MASTER: 1
-      PROXY_CLIENT_ID: ${GATEKEEPER_CLIENT_ID}
-      PROXY_CLIENT_SECRET: ${GATEKEEPER_CLIENT_SECRET}
-      PROXY_ENCRYPTION_KEY: ${GATEKEEPER_ENCRYPTION_KEY}
-      PROXY_LISTEN: ${GATEKEEPER_LISTEN}
-      PROXY_UPSTREAM_URL: ${GATEKEEPER_UPSTREAM_URL}
-      PROXY_DISCOVERY_URL: ${GATEKEEPER_DISCOVERY_URL}
-      PROXY_REDIRECTION_URL: ${GATEKEEPER_REDIRECTION_URL}
 
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+      OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
+      OAUTH2_PROXY_REDIRECT_URL: ${OAUTH2_PROXY_REDIRECT_URL}
 networks:
   default:
     external:
