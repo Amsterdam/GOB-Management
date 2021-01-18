@@ -15,7 +15,7 @@ from gobmanagement.database.base import db_session
 from gobmanagement.database import get_process_state
 from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
-from gobmanagement.auth import RequestUser
+from gobmanagement.security import SecurityMiddleware
 
 from gobmanagement.grpc.services.jobs import JobsServicer
 
@@ -24,41 +24,6 @@ from gobmanagement.message_broker.management import get_queues, purge_queue
 
 def _health():
     return 'Connectivity OK'
-
-
-def _secure():
-    """
-    Test endpoint for keycloak
-    :return:
-    """
-    request_user = RequestUser()
-    print(request_user)
-    return 'Secure access OK'
-
-
-def _job(job_id=None):
-    """
-    Create a new job
-
-    :return:
-    """
-    host = request.host
-    runs_locally = "127.0.0.1" in host
-    if not runs_locally:
-        # External call, check is the caller is authenticated and authorized
-        userid = request.headers.get('X-Auth-Userid')
-        roles = request.headers.get('X-Auth-Roles', '')
-        if userid is None:
-            # Check if the user is authenticated => 401 Unauthorized
-            return "Not logged in", 401
-        elif "gob_adm" not in roles:
-            # Check if the user is authorized => 403 Forbidden
-            return "Insufficient rights to start job", 403
-
-    if request.method == 'POST':
-        return _start_job()
-    elif request.method == 'DELETE':
-        return _remove_job(job_id)
 
 
 def _validate_request(valid_properties, data):
@@ -193,14 +158,15 @@ def _queue(queue_name):
     return jsonify(result), status_code, {'Content-Type': 'application/json'}
 
 
+security_middleware = SecurityMiddleware(app)
+
 # Routes
 ROUTES = [
     # Health check URL
     ('/status/health/', _health, ['GET']),
-    (f'{API_BASE_PATH}/job/', _job, ['POST']),
-    (f'{API_BASE_PATH}/job/<job_id>', _job, ['DELETE']),
+    (f'{API_BASE_PATH}/job/', _start_job, ['POST']),
+    (f'{API_BASE_PATH}/job/<job_id>', _remove_job, ['DELETE']),
     (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
-    (f'{API_BASE_PATH}/secure/', _secure, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
     (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
     (f'{API_BASE_PATH}/state/process/<process_id>', _process_state, ['GET']),
