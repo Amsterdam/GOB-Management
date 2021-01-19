@@ -17,7 +17,7 @@ _PERMISSIONS = {
         'methods': ['POST'],
         'roles': [GOB_ADMIN],
     },
-    f'{API_BASE_PATH}/job/.*': {
+    f'{API_BASE_PATH}/job/.+': {
         'methods': ['DELETE'],
         'roles': [GOB_ADMIN],
     },
