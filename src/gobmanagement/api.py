@@ -9,7 +9,7 @@ from gobcore.model import GOBModel
 from gobcore.message_broker.notifications import NOTIFY_EXCHANGE
 from gobcore.message_broker.config import WORKFLOW_QUEUE
 
-from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH
+from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH, PUBLIC_API_BASE_PATH
 from gobmanagement.app import app
 from gobmanagement.database.base import db_session
 from gobmanagement.database import get_process_state
@@ -169,9 +169,10 @@ ROUTES = [
     (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
     (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
-    (f'{API_BASE_PATH}/state/process/<process_id>', _process_state, ['GET']),
-    (f'{API_BASE_PATH}/state/workflow/', _workflow_state, ['GET']),
-    (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE'])
+    (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE']),
+    # Public URLS
+    (f'{PUBLIC_API_BASE_PATH}/state/process/<process_id>', _process_state, ['GET']),
+    (f'{PUBLIC_API_BASE_PATH}/state/workflow/', _workflow_state, ['GET'])
 ]
 
 for route, view_func, methods in ROUTES:
