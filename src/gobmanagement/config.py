@@ -1,6 +1,7 @@
 import os
 
 API_BASE_PATH = "/gob_management"
+PUBLIC_API_BASE_PATH = f"/{API_BASE_PATH}/public"
 
 API_PORT = os.getenv("GOB_MANAGEMENT_PORT", 8143)
 
