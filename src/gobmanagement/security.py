@@ -5,7 +5,7 @@ from flask import request
 from gobcore.secure.request import extract_roles
 from gobcore.secure.config import GOB_ADMIN, GOB_ADMIN_R
 
-from gobmanagement.config import API_BASE_PATH
+from gobmanagement.config import API_BASE_PATH, PUBLIC_API_BASE_PATH
 
 _PUBLIC = 'public'
 _PERMISSIONS = {
@@ -25,7 +25,7 @@ _PERMISSIONS = {
         'methods': ['GET', 'POST'],
         'roles': _PUBLIC,
     },
-    f'{API_BASE_PATH}/state/.*': {
+    f'{PUBLIC_API_BASE_PATH}/state/.*': {
         'methods': ['GET'],
         'roles': _PUBLIC,
     },

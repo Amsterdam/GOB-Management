@@ -70,13 +70,13 @@ class TestSecurityMiddleware(TestCase):
             ('/gob_management/catalogs/', 'GET', [GOB_ADMIN, GOB_ADMIN_R]),
             ('/gob_management/queues/', 'GET', [GOB_ADMIN, GOB_ADMIN_R]),
             ('/gob_management/queues/', 'POST', [GOB_ADMIN, GOB_ADMIN_R]),
-            ('/gob_management/state/process/1', 'GET', _PUBLIC),
-            ('/gob_management/state/process/1', 'POST', None),
-            ('/gob_management/state/workflow', 'GET', _PUBLIC),
-            ('/gob_management/state/workflow/', 'GET', _PUBLIC),
-            ('/gob_management/state/workflow/', 'POST', None),
             ('/gob_management/queue/a', 'POST', None),
             ('/gob_management/queue/a', 'DELETE', [GOB_ADMIN]),
+            ('/gob_management/public/state/process/1', 'GET', _PUBLIC),
+            ('/gob_management/public/state/process/1', 'POST', None),
+            ('/gob_management/public/state/workflow', 'GET', _PUBLIC),
+            ('/gob_management/public/state/workflow/', 'GET', _PUBLIC),
+            ('/gob_management/public/state/workflow/', 'POST', None),
         ]
 
         for path, method, expected_result in testcases:
