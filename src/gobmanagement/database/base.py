@@ -10,7 +10,7 @@ from .config import GOB_MANAGEMENT_DB
 
 # Create database engine
 db_uri = URL(**GOB_MANAGEMENT_DB)
-engine = create_engine(db_uri)
+engine = create_engine(db_uri, connect_args={'sslmode': 'require'})
 
 # Declarative base model to create database tables and classes
 Base.metadata.bind = engine  # Bind engine to metadata of the base class
