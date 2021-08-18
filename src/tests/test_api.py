@@ -32,7 +32,7 @@ class TestJob(TestCase):
                 'application': 'Application',
                 'attribute': 'attr',
                 'mode': 'modde',
-                'user': 'Some User (with parentheses and dot .)'
+                'user': 'Some User (with parentheses and dot . and @)'
             }
 
             api._start_job()
