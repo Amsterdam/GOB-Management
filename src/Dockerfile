@@ -25,9 +25,6 @@ RUN rm requirements.txt
 # Copy gobmanagement module
 COPY gobmanagement gobmanagement
 
-# Copy deploy dir
-COPY deploy /deploy/
-
 # Build
 COPY build.sh /app
 RUN ./build.sh
@@ -40,4 +37,4 @@ RUN mkdir -p /var/log/oauth2-proxy && chown datapunt /var/log/oauth2-proxy
 
 USER datapunt
 
-CMD ["/deploy/docker-run.sh"]
+CMD uwsgi
