@@ -1,16 +1,18 @@
-version: '3.0'
+version: '3.4'
 
 services:
 
   gobmanagement:
-    build: src
+    build:
+      context: src
+      target: development
     ports:
-      # To use oauth2-proxy:
-      #   Set port to 8000
-      #   Set the variables in .env
+      # No OAuth2 Proxy
+      - "8141:8001"
+      # With oauth2-proxy
       #   Set cookie_secure in oauth2-proxy.cfg to false
-      # Use port 8001 to bypass the OAuth2 Proxy locally
-      - "8143:8001"
+      #   Uncomment UWSGI_ATTACH_DAEMON2
+      # - "8141:8000"
     container_name: gobmanagement
     environment:
       MESSAGE_BROKER_ADDRESS: rabbitmq
@@ -22,13 +24,13 @@ services:
       UWSGI_MODULE: "gobmanagement.wsgi"
       UWSGI_CALLABLE: "application"
       UWSGI_MASTER: "1"
-      UWSGI_GEVENT: "100"
+      UWSGI_ENABLE_THREADS: ""
+      UWSGI_PROCESSES: "1"
       UWGSI_SHOW_CONFIG: "1"
+      UWSGI_LAZY_APPS: "1"
       UWSGI_HTTP_WEBSOCKETS: "1"
-      UWSGI_ENABLE_THREADS: "1"
-      UWSGI_THREADS: "4"
       UWSGI_BUFFER_SIZE: "32768"
-      UWSGI_ATTACH_DAEMON2: "cmd=./oauth2-proxy --config oauth2-proxy.cfg,freq=3,control=true,stopsignal=15"
+      # UWSGI_ATTACH_DAEMON2: "cmd=./oauth2-proxy --config oauth2-proxy.cfg,freq=3,control=true,stopsignal=15"
       UWSGI_DIE_ON_TERM: "1"
       UWSGI_NEED_APP: "1"
 
@@ -37,6 +39,17 @@ services:
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
       OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
       OAUTH2_PROXY_REDIRECT_URL: ${OAUTH2_PROXY_REDIRECT_URL}
+    volumes:
+      - gob-volume:/app/shared
+      - ./src/gobmanagement:/app/gobmanagement
+      - ./src/tests:/app/tests
+      - ${GOB_CORE_DIR-../GOB-Core}:/app/GOB-Core
+      - ${GOB_CONFIG_DIR-../GOB-Config}:/app/GOB-Config
+
+volumes:
+  gob-volume:
+    external: true
+
 networks:
   default:
     external:
