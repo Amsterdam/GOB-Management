@@ -1,5 +1,5 @@
 flake8==3.8.4
-Flask==1.1.1
+Flask==2.0.3
 Flask-Cors==3.0.9
 Flask-GraphQL==2.0.0
 Flask-SocketIO==3.1.1
