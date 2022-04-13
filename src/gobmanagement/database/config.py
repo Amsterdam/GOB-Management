@@ -7,7 +7,7 @@ and the specification of the model (get_gobmodel)
 import os
 
 GOB_MANAGEMENT_DB = {
-    'drivername': 'postgres',
+    'drivername': 'postgresql',
     'database': "gob_management",
     'username': os.getenv("DATABASE_USER", "gob"),
     'password': os.getenv("DATABASE_PASSWORD", "insecure"),

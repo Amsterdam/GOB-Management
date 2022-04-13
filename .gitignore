@@ -10,3 +10,7 @@ htmlcov
 .coverage
 
 .env
+
+.DS_Store
+.python-version
+.idea/
