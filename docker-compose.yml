@@ -44,7 +44,6 @@ services:
       - ./src/gobmanagement:/app/gobmanagement
       - ./src/tests:/app/tests
       - ${GOB_CORE_DIR-../GOB-Core}:/app/GOB-Core
-      - ${GOB_CONFIG_DIR-../GOB-Config}:/app/GOB-Config
 
 volumes:
   gob-volume:

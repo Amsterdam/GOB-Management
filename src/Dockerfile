@@ -42,23 +42,20 @@ CMD uwsgi
 
 # Development.
 FROM application as development
-# Install GOB-Core and GOB-Config in development mode. Will be overridden with
-# mounts from the developer filesystem. Changes made to GOB-Core and GOB-Config
+# Install GOB-Core in development mode. Will be overridden with
+# mounts from the developer filesystem. Changes made to GOB-Core
 # will be available immediately.
 USER root
 RUN git clone --depth=1 https://github.com/Amsterdam/GOB-Core.git
 RUN LIBGDAL_VERSION=$(gdal-config --version) pip install -e /app/GOB-Core
-RUN git clone --depth=1 https://github.com/Amsterdam/GOB-Config.git
-RUN pip install -e /app/GOB-Config
 USER datapunt
 
 
 # Test.
 FROM application as test
 USER root
-# Remove gobcore/gobconfig tests
+# Remove gobcore tests
 RUN rm -rf /app/src/gobcore/tests
-RUN rm -rf /app/src/gobconfig/tests
 
 # Copy tests.
 COPY tests tests
