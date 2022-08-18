@@ -109,7 +109,7 @@ The logs can be queried using the following examples:
 To filter the logs on a single *processId* use the following example
 (replace `PROCESSID` with an actual value):
 
-```json
+```
 {
   logs(processId: "PROCESSID") {
     edges {
@@ -125,7 +125,7 @@ To filter the logs on a single *processId* use the following example
 
 To filter the logs on a source-entity combination use the following example:
 
-```json
+```
 {
   logs(source: "Grondslag" entity: "meetbouten") {
     edges {
@@ -141,7 +141,7 @@ To filter the logs on a source-entity combination use the following example:
 
 To get a list of all possible source-entity combinations use:
 
-```json
+```
 {
   sourceEntities {
     source
