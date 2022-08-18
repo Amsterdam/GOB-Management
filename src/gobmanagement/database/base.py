@@ -9,7 +9,7 @@ from gobcore.model.sa.management import Base
 from .config import GOB_MANAGEMENT_DB
 
 # Create database engine
-db_uri = URL(**GOB_MANAGEMENT_DB)
+db_uri = URL.create(**GOB_MANAGEMENT_DB)
 engine = create_engine(db_uri, connect_args={'sslmode': 'require'})
 
 # Declarative base model to create database tables and classes
