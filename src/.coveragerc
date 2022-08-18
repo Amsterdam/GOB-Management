@@ -1,2 +1,2 @@
 [run]
-omit = gobmanagement/grpc/out/*
+omit = gobmanagement/grpc/out/jobs_pb2_grpc.py

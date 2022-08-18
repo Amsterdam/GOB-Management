@@ -57,14 +57,14 @@ USER root
 # Remove gobcore tests
 RUN rm -rf /app/src/gobcore/tests
 
-# Copy tests.
+# Copy tests module and tests
 COPY tests tests
-COPY .flake8 .flake8
-COPY test.sh test.sh
-COPY .coveragerc .coveragerc
+COPY test.sh pytest.ini .coveragerc .flake8 ./
 
 # Copy Jenkins files.
 COPY .jenkins /.jenkins
 
+# gRPC Proto definition generation test.
+RUN chown datapunt /app/gobmanagement/grpc/protos/jobs.proto /app/gobmanagement/grpc/out/jobs_pb2_grpc.py
 RUN mkdir -p /app/shared/message_broker && chown datapunt /app/shared
 USER datapunt
