@@ -25,10 +25,6 @@ RUN rm -rf /opt/wheelhouse
 # Copy gobmanagement module.
 COPY gobmanagement gobmanagement
 
-# Build gRPC Proto definition.
-COPY build.sh /app
-RUN ./build.sh
-
 # OAuth2 Proxy.
 COPY ./oauth2-proxy oauth2-proxy
 COPY ./oauth2-proxy.cfg oauth2-proxy.cfg
@@ -59,12 +55,10 @@ RUN rm -rf /app/src/gobcore/tests
 
 # Copy tests module and tests
 COPY tests tests
-COPY test.sh pytest.ini .coveragerc .flake8 ./
+COPY test.sh pytest.ini .flake8 ./
 
 # Copy Jenkins files.
 COPY .jenkins /.jenkins
 
-# gRPC Proto definition generation test.
-RUN chown datapunt /app/gobmanagement/grpc/protos/jobs.proto /app/gobmanagement/grpc/out/jobs_pb2_grpc.py
 RUN mkdir -p /app/shared/message_broker && chown datapunt /app/shared
 USER datapunt

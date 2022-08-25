@@ -47,13 +47,6 @@ Or activate the previously created virtual environment:
 source venv/bin/activate
 ```
 
-Build gRPC code:
-
-```bash
-cd src
-./build.sh
-```
-
 # Run
 
 Start the service:
