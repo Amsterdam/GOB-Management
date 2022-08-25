@@ -5,13 +5,8 @@ from gobcore.message_broker import publish
 from gobcore.message_broker.config import WORKFLOW_EXCHANGE, WORKFLOW_REQUEST_KEY
 
 
-class JobsServicer:
-    """JobsServicer does not extend the JobsServicer from grpc.out.gobmanagement_pb2_grpc. We catch all generated
-    methods of the form Start{jobname}Job in this class. Subclassing the generated JobsServicer would mean that our
-    __getattr__ method would not be called. A test is written in the test directory that validates that all methods
-    defined by the generated JobsServices are handles by this class.
-
-    """
+class JobHandler:
+    """Publish and remove workflow jobs."""
     startcommands = StartCommands()
 
     def publish_job(self, name, request):

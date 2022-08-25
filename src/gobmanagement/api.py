@@ -17,7 +17,7 @@ from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
 from gobmanagement.security import SecurityMiddleware
 
-from gobmanagement.jobs import JobsServicer
+from gobmanagement.jobs import JobHandler
 
 from gobmanagement.message_broker.management import get_queues, purge_queue
 
@@ -69,9 +69,9 @@ def _start_job():
     if errors:
         return jsonify({'errors': errors}), 400
 
-    jobs_services = JobsServicer()
+    job_handler = JobHandler()
     try:
-        msg = jobs_services.publish_job(data['action'], data)
+        msg = job_handler.publish_job(data['action'], data)
         return jsonify(msg['header'])
     except Exception as e:
         # 400 Bad Request
@@ -85,8 +85,8 @@ def _remove_job(job_id):
     :param job_id:
     :return:
     """
-    jobs_services = JobsServicer()
-    return jsonify(jobs_services.remove_job(job_id))
+    job_handler = JobHandler()
+    return jsonify(job_handler.remove_job(job_id))
 
 
 def _catalogs():
