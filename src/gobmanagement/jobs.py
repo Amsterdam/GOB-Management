@@ -4,8 +4,6 @@ from gobcore.workflow.start_commands import StartCommands, StartCommand
 from gobcore.message_broker import publish
 from gobcore.message_broker.config import WORKFLOW_EXCHANGE, WORKFLOW_REQUEST_KEY
 
-import re
-
 
 class JobsServicer:
     """JobsServicer does not extend the JobsServicer from grpc.out.gobmanagement_pb2_grpc. We catch all generated
@@ -15,19 +13,6 @@ class JobsServicer:
 
     """
     startcommands = StartCommands()
-
-    def __getattr__(self, name):
-        match = re.fullmatch(r'Start(\w*)Job', name)
-
-        if match:
-            job_type = match.group(1).lower()
-        else:
-            raise AttributeError()
-
-        def method(*args):
-            return self.start_job(job_type, *args)
-
-        return method
 
     def publish_job(self, name, request):
         command = self.startcommands.get(name)
