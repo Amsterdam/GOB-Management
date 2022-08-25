@@ -1,3 +1,0 @@
-out/*.py
-protos/*.proto
-!__init__.py

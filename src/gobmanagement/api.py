@@ -1,5 +1,3 @@
-import re
-
 from flask import jsonify, request
 from flask_graphql import GraphQLView
 from flask_cors import CORS
@@ -16,8 +14,6 @@ from gobmanagement.database import get_process_state
 from gobmanagement.schemas import schema
 from gobmanagement.socket import LogBroadcaster
 from gobmanagement.security import SecurityMiddleware
-
-from gobmanagement.grpc.services.jobs import JobsServicer
 
 from gobmanagement.message_broker.management import get_queues, purge_queue
 
@@ -48,45 +44,6 @@ def _validate_request(valid_properties, data):
         if value is not None and not valid_properties[property].match(value):
             errors.append(f"Invalid format for {property}")
     return errors
-
-
-def _start_job():
-    """
-    Start a new job
-
-    The job parameters are contained in the request
-    :return:
-    """
-    alphanumeric = re.compile(r'^\w+$')
-    valid_properties = {key: alphanumeric for key in [
-        'action', 'catalogue', 'collection', 'destination', 'product', 'attribute', 'mode', 'application',
-    ]}
-    valid_properties['user'] = re.compile(r'^[\w@(). ]+$')
-
-    data = request.get_json(silent=True)
-    errors = _validate_request(valid_properties, data)
-
-    if errors:
-        return jsonify({'errors': errors}), 400
-
-    jobs_services = JobsServicer()
-    try:
-        msg = jobs_services.publish_job(data['action'], data)
-        return jsonify(msg['header'])
-    except Exception as e:
-        # 400 Bad Request
-        return f"Job start failed: {str(e)}", 400
-
-
-def _remove_job(job_id):
-    """
-    Removes a job
-
-    :param job_id:
-    :return:
-    """
-    jobs_services = JobsServicer()
-    return jsonify(jobs_services.remove_job(job_id))
 
 
 def _catalogs():
@@ -164,8 +121,6 @@ security_middleware = SecurityMiddleware(app)
 ROUTES = [
     # Health check URL
     ('/status/health/', _health, ['GET']),
-    (f'{API_BASE_PATH}/job/', _start_job, ['POST']),
-    (f'{API_BASE_PATH}/job/<job_id>', _remove_job, ['DELETE']),
     (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
     (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
     (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
