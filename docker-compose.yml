@@ -8,11 +8,11 @@ services:
       target: development
     ports:
       # No OAuth2 Proxy
-      - "8141:8001"
+      - "8143:8001"
       # With oauth2-proxy
       #   Set cookie_secure in oauth2-proxy.cfg to false
       #   Uncomment UWSGI_ATTACH_DAEMON2
-      # - "8141:8000"
+      # - "8143:8000"
     container_name: gobmanagement
     environment:
       MESSAGE_BROKER_ADDRESS: rabbitmq
@@ -44,7 +44,6 @@ services:
       - ./src/gobmanagement:/app/gobmanagement
       - ./src/tests:/app/tests
       - ${GOB_CORE_DIR-../GOB-Core}:/app/GOB-Core
-      - ${GOB_CONFIG_DIR-../GOB-Config}:/app/GOB-Config
 
 volumes:
   gob-volume:
@@ -52,5 +51,5 @@ volumes:
 
 networks:
   default:
-    external:
-      name: gob-network
+    name: gob-network
+    external: true
