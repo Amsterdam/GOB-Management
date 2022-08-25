@@ -17,7 +17,7 @@ class TestJob(TestCase):
     def setUp(self) -> None:
         mock_request = MockedRequest()
 
-    @mock.patch('gobmanagement.api.JobsServicer')
+    @mock.patch('gobmanagement.api.JobHandler')
     @mock.patch('gobmanagement.api.jsonify', lambda x: x)
     def test_start_job(self, mock_servicer):
         mock_request = mock.MagicMock()
@@ -87,7 +87,7 @@ class TestCatalogs(TestCase):
     @mock.patch('gobmanagement.api.GOBModel', MockModel)
     @mock.patch('gobmanagement.api.jsonify', lambda x : x)
     def test_catalogs(self):
-        result = api._catalogs();
+        result = api._catalogs()
         self.assertEqual(result, ({'catalog1': ['coll1', 'coll2']}, 200, {'Content-Type': 'application/json'}))
 
 class TestQueues(TestCase):
