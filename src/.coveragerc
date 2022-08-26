@@ -1,0 +1,4 @@
+[run]
+omit = gobmanagement/__main__.py
+	gobmanagement/storage.py
+	gobmanagement/wsgi.py
