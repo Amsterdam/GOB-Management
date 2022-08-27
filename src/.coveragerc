@@ -1,3 +1,2 @@
 [run]
-omit = gobmanagement/__main__.py
-	gobmanagement/storage.py
+omit = gobmanagement/storage.py
