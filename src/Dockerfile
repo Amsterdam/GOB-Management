@@ -53,9 +53,9 @@ USER root
 # Remove gobcore tests
 RUN rm -rf /app/src/gobcore/tests
 
-# Copy tests module and tests
-COPY tests tests
+# Copy test module and tests.
 COPY test.sh pytest.ini .flake8 .coveragerc ./
+COPY tests tests
 
 # Copy Jenkins files.
 COPY .jenkins /.jenkins
