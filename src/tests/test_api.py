@@ -2,23 +2,15 @@ from unittest import TestCase, mock
 
 from gobmanagement import api
 
-class MockedRequest:
-
-    def __init__(self):
-        self.host = "any host"
-        self.headers = {}
-        self.method = 'POST'
-
-
-mock_request = MockedRequest()
 
 class TestJob(TestCase):
 
-    def setUp(self) -> None:
-        mock_request = MockedRequest()
+    def test_health(self):
+        result = api._health()
+        self.assertEqual(result, "Connectivity OK")
 
-    @mock.patch('gobmanagement.api.JobHandler')
-    @mock.patch('gobmanagement.api.jsonify', lambda x: x)
+    @mock.patch('gobmanagement.api.JobHandler', spec_set=True)
+    @mock.patch('gobmanagement.api.jsonify', lambda x: x, spec_set=True)
     def test_start_job(self, mock_servicer):
         mock_request = mock.MagicMock()
         with mock.patch('gobmanagement.api.request', mock_request):
@@ -36,7 +28,8 @@ class TestJob(TestCase):
             }
 
             api._start_job()
-            mock_servicer.return_value.publish_job.assert_called_with('some_action', mock_request.get_json.return_value)
+            mock_servicer.return_value.publish_job.assert_called_with(
+                'some_action', mock_request.get_json.return_value)
 
             # Mismatching properties
             mock_request.get_json.return_value = {
@@ -67,39 +60,47 @@ class TestJob(TestCase):
                 'Invalid format for user'
             ]}, 400), res)
 
+    @mock.patch('gobmanagement.api.JobHandler', spec_set=True)
+    @mock.patch('gobmanagement.api.jsonify', lambda x: x, spec_set=True)
+    def test_remove_job(self, mock_jobhandler):
+        job_id = 12345
+        result = api._remove_job(job_id)
+        mock_jobhandler.return_value.remove_job.assert_called_with(job_id)
+
 class MockModel:
 
-    def get_catalogs(self):
-        return {
-            'catalog1': {
+    def items(self):
+        return [(
+            'catalog1', {
                 'collections': {
                     'coll1': {},
                     'coll2': {}
                 }
             }
-        }
+        )]
 
 class TestCatalogs(TestCase):
 
     def setUp(self) -> None:
         pass
 
-    @mock.patch('gobmanagement.api.GOBModel', MockModel)
-    @mock.patch('gobmanagement.api.jsonify', lambda x : x)
+    @mock.patch('gobmanagement.api.gob_model', MockModel())
+    @mock.patch('gobmanagement.api.jsonify', lambda x: x, spec_set=True)
     def test_catalogs(self):
         result = api._catalogs()
-        self.assertEqual(result, ({'catalog1': ['coll1', 'coll2']}, 200, {'Content-Type': 'application/json'}))
+        self.assertEqual(
+            result, ({'catalog1': ['coll1', 'coll2']}, 200, {'Content-Type': 'application/json'}))
 
 class TestQueues(TestCase):
 
-    @mock.patch('gobmanagement.api.jsonify', lambda x : x)
+    @mock.patch('gobmanagement.api.jsonify', lambda x: x, spec_set=True)
     @mock.patch('gobmanagement.api.get_queues')
     def test_queues(self, mock_get_queues):
         mock_get_queues.return_value = ('any result', 'any status code')
-        api._queues();
+        api._queues()
         mock_get_queues.assert_called()
 
-    @mock.patch('gobmanagement.api.jsonify', lambda x : x)
+    @mock.patch('gobmanagement.api.jsonify', lambda x: x, spec_set=True)
     @mock.patch('gobmanagement.api.purge_queue')
     def test_queue(self, purge_queue):
         mock_request = mock.MagicMock()
@@ -118,14 +119,14 @@ class TestQueues(TestCase):
 
 class TestState(TestCase):
 
-    @mock.patch('gobmanagement.api.jsonify')
+    @mock.patch('gobmanagement.api.jsonify', spec_set=True)
     @mock.patch('gobmanagement.api.get_process_state')
     def test_process_state(self, mock_get_process_state, mock_jsonify):
         result = api._process_state("any process id")
         mock_jsonify.assert_called_with(mock_get_process_state.return_value)
         self.assertEqual(result, mock_jsonify.return_value)
 
-    @mock.patch('gobmanagement.api.jsonify')
+    @mock.patch('gobmanagement.api.jsonify', spec_set=True)
     @mock.patch('gobmanagement.api.get_queues')
     def test_workflow_state(self, mock_queues, mock_jsonify):
         from gobcore.message_broker.notifications import NOTIFY_EXCHANGE
