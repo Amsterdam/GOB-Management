@@ -5,10 +5,10 @@ from flask_graphql import GraphQLView
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
-from gobcore.model import GOBModel
 from gobcore.message_broker.notifications import NOTIFY_EXCHANGE
 from gobcore.message_broker.config import WORKFLOW_QUEUE
 
+from gobmanagement import gob_model
 from gobmanagement.config import ALLOWED_ORIGINS, API_BASE_PATH, PUBLIC_API_BASE_PATH
 from gobmanagement.app import app
 from gobmanagement.database.base import db_session
@@ -29,8 +29,8 @@ def _health():
 def _validate_request(valid_properties, data):
     """Checks if data confirms to valid_properties.
 
-    Valid_properties is a dict with property: regex pairs. Only checks if the data matches the regex when the property
-    is not None. None is always valid.
+    Valid_properties is a dict with property: regex pairs. Only checks if the data matches the regex
+    when the property is not None. None is always valid.
 
     Also checks if data does not contain any unexpected properties.
 
@@ -51,15 +51,16 @@ def _validate_request(valid_properties, data):
 
 
 def _start_job():
-    """
-    Start a new job
+    """Start a new job.
 
-    The job parameters are contained in the request
+    The job parameters are contained in the request.
+
     :return:
     """
     alphanumeric = re.compile(r'^\w+$')
     valid_properties = {key: alphanumeric for key in [
-        'action', 'catalogue', 'collection', 'destination', 'product', 'attribute', 'mode', 'application',
+        'action', 'catalogue', 'collection', 'destination',
+        'product', 'attribute', 'mode', 'application',
     ]}
     valid_properties['user'] = re.compile(r'^[\w@(). ]+$')
 
@@ -79,8 +80,7 @@ def _start_job():
 
 
 def _remove_job(job_id):
-    """
-    Removes a job
+    """Removes a job.
 
     :param job_id:
     :return:
@@ -90,12 +90,10 @@ def _remove_job(job_id):
 
 
 def _catalogs():
-    model = GOBModel()
-    catalogs = model.get_catalogs()
     result = {}
-    for catalog_name, catalog in catalogs.items():
+    for catalog_name, catalog in gob_model.items():
         result[catalog_name] = []
-        for entity_name, model in catalog['collections'].items():
+        for entity_name in catalog['collections']:
             result[catalog_name].append(entity_name)
     return jsonify(result), 200, {'Content-Type': 'application/json'}
 
@@ -110,10 +108,9 @@ _graphql = GraphQLView.as_view(
 
 
 def _process_state(process_id):
-    """
-    Returns the state of a process as a list of jobs {id, status}
+    """Returns the state of a process as a list of jobs {id, status}.
 
-    This is a whitelisted endpoint. Only the most limited amount of information is returned
+    This is a whitelisted endpoint. Only the most limited amount of information is returned.
 
     :param process_id:
     :return:
@@ -123,12 +120,11 @@ def _process_state(process_id):
 
 
 def _workflow_state():
-    """
-    Return the workflow state as a list of queues {name, #messages_pending}
+    """Return the workflow state as a list of queues {name, #messages_pending}.
 
-    Only the queues that start workflows are taken into account
+    Only the queues that start workflows are taken into account.
 
-    This is a whitelisted endpoint. Only the most limited amount of information is returned
+    This is a whitelisted endpoint. Only the most limited amount of information is returned.
 
     :return:
     """
@@ -137,7 +133,9 @@ def _workflow_state():
     state = [{
         'name': queue['name'],
         'messages_unacknowledged': queue['messages_unacknowledged']
-    } for queue in [queue for name in workflow_queues for queue in queues if queue['name'].startswith(name)]]
+    } for queue in [
+        queue for name in workflow_queues for queue in queues if queue['name'].startswith(name)]
+    ]
     return jsonify(state)
 
 
@@ -147,8 +145,7 @@ def _queues():
 
 
 def _queue(queue_name):
-    """
-    Purge the queue with the specified name
+    """Purge the queue with the specified name.
 
     :param queue_name:
     :return:

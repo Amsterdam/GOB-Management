@@ -1,9 +1,5 @@
 [flake8]
-exclude=.git,
-        .cfg,
-        .ini,
-        .sh,
-        tests,
-        src/gobcore/*
-max-complexity=6
+exclude = __pycache__
+max-complexity = 6
 max-line-length = 119
+show_source = True
