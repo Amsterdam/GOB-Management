@@ -32,7 +32,6 @@ RUN chmod 755 oauth2-proxy
 RUN mkdir -p /var/log/oauth2-proxy && chown datapunt /var/log/oauth2-proxy
 
 USER datapunt
-
 CMD uwsgi
 
 
@@ -60,5 +59,6 @@ COPY tests tests
 # Copy Jenkins files.
 COPY .jenkins /.jenkins
 
-RUN mkdir -p /app/shared/message_broker && chown datapunt /app/shared
+RUN mkdir -m 2755 -p /app/shared/message_broker && chown datapunt.datapunt /app/shared /app/shared/message_broker
+
 USER datapunt
