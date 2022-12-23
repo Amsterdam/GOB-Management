@@ -3,9 +3,11 @@ version: '3.7'
 services:
 
   gobmanagement:
+    container_name: gobmanagement
     build:
       context: src
       target: development
+    platform: linux/amd64
     ports:
       # No OAuth2 Proxy
       - "8143:8001"
@@ -13,7 +15,6 @@ services:
       #   Set cookie_secure in oauth2-proxy.cfg to false
       #   Uncomment UWSGI_ATTACH_DAEMON2
       # - "8143:8000"
-    container_name: gobmanagement
     environment:
       MESSAGE_BROKER_ADDRESS: rabbitmq
       GOB_SHARED_DIR: /app/shared
@@ -39,6 +40,8 @@ services:
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
       OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
       OAUTH2_PROXY_REDIRECT_URL: ${OAUTH2_PROXY_REDIRECT_URL}
+      # Temporary branch for brk2
+      REPO_BASE: "https://raw.githubusercontent.com/Amsterdam/amsterdam-schema/brk2_active_dataset"
     volumes:
       - gob-volume:/app/shared
       - ./src/gobmanagement:/app/gobmanagement
