@@ -40,8 +40,6 @@ services:
       OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
       OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
       OAUTH2_PROXY_REDIRECT_URL: ${OAUTH2_PROXY_REDIRECT_URL}
-      # Temporary branch for brk2
-      REPO_BASE: "https://raw.githubusercontent.com/Amsterdam/amsterdam-schema/brk2_active_dataset"
     volumes:
       - gob-volume:/app/shared
       - ./src/gobmanagement:/app/gobmanagement
