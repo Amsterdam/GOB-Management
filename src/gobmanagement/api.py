@@ -101,10 +101,10 @@ def _catalogs():
 CORS(app, origins=ALLOWED_ORIGINS)
 
 _graphql = GraphQLView.as_view(
-                'graphql',
-                schema=schema,
-                graphiql=True  # for having the GraphiQL interface
-            )
+    'graphql',
+    schema=schema,
+    graphiql=True  # for having the GraphiQL interface
+)
 
 
 def _process_state(process_id):
