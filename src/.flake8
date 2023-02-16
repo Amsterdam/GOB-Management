@@ -3,3 +3,4 @@ exclude = __pycache__
 max-complexity = 6
 max-line-length = 119
 show_source = True
+ignore = D104,D400,D401,D103,D200,D205,D102,D101,D106,D017,D100,D107,D204,D202,
