@@ -271,7 +271,7 @@ SELECT
     firstlog.process_id,
     job.id                       AS jobid,
     job.end - job.start          AS bruto_duration,
-    stepdurations.duration       AS netto_duration,
+    steps.duration               AS netto_duration,
     now() - job.start as time_ago,
     CASE WHEN now() - job.start <= '24 hours'::interval THEN ' 0 - 24 uur'
          WHEN now() - job.start <= '48 hours'::interval THEN '24 - 48 uur'
@@ -320,17 +320,12 @@ join logs firstlog on firstlog.logid = log.logid
 join jobs job ON job.id=log.jobid
 left join (
     select jobid,
+           SUM(jobsteps.end - jobsteps.start) AS duration,
            max(id) as stepid
     from jobsteps
     group by jobid
-) as laststep on laststep.jobid = log.jobid
-left join jobsteps step on step.id = laststep.stepid
-LEFT JOIN (
-    SELECT jobid,
-           SUM(jobsteps.end - jobsteps.start) AS duration
-    FROM jobsteps
-    GROUP BY jobid
-) as stepdurations ON stepdurations.jobid = job.id
+) as steps on steps.jobid = log.jobid
+left join jobsteps step on step.id = steps.stepid
 """
 
         statement = f"""
