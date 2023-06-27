@@ -24,7 +24,7 @@ services:
       UWSGI_HTTP: ":8001"
       UWSGI_MODULE: "gobmanagement.wsgi"
       UWSGI_CALLABLE: "application"
-      UWSGI_MASTER: "1"
+      UWSGI_MASTER: "0"
       UWSGI_ENABLE_THREADS: ""
       UWSGI_PROCESSES: "1"
       UWGSI_SHOW_CONFIG: "1"
