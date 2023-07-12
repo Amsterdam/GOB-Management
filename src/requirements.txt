@@ -22,4 +22,4 @@ singledispatch==3.7.0
 Werkzeug==2.2.3
 zope.event==4.5.0
 zope.interface==5.4.0
--e git+https://github.com/Amsterdam/GOB-Core.git@v2.7.3#egg=gobcore
+-e git+https://github.com/Amsterdam/GOB-Core.git@v2.13.0#egg=gobcore
