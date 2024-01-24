@@ -18,7 +18,7 @@ python-engineio==4.3.4
 python-socketio~=5.7.2
 Rx==1.6.1
 singledispatch==3.7.0
-Werkzeug==2.2.3
+Werkzeug==2.3.8
 zope.event==4.5.0
 zope.interface==5.4.0
 git+https://github.com/Amsterdam/GOB-Core.git@v2.26.0
