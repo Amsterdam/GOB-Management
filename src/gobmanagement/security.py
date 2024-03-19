@@ -33,6 +33,18 @@ _PERMISSIONS = {
         'methods': ['DELETE'],
         'roles': [GOB_ADMIN],
     },
+    f'{PUBLIC_API_BASE_PATH}/catalogs/?': {
+        'methods': ['GET'],
+        'roles': _PUBLIC,
+    },
+    f'{PUBLIC_API_BASE_PATH}/queues/?': {
+        'methods': ['GET'],
+        'roles': _PUBLIC,
+    },
+    f'{PUBLIC_API_BASE_PATH}/graphql/?': {
+        'methods': ['GET', 'POST'],
+        'roles': _PUBLIC,
+    },
     '/.*': {
         'methods': ['GET', 'POST'],
         'roles': [GOB_ADMIN, GOB_ADMIN_R],
