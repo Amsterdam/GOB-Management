@@ -161,13 +161,15 @@ security_middleware = SecurityMiddleware(app)
 ROUTES = [
     # Health check URL
     ('/status/health/', _health, ['GET']),
-    (f'{API_BASE_PATH}/job/', _start_job, ['POST']),
-    (f'{API_BASE_PATH}/job/<job_id>', _remove_job, ['DELETE']),
-    (f'{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
-    (f'{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
-    (f'{API_BASE_PATH}/queues/', _queues, ['GET']),
-    (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE']),
+
+    # Disabled for now. If needed, enable security middleware again in Openstack.
+    # (f'{API_BASE_PATH}/job/', _start_job, ['POST']),
+    # (f'{API_BASE_PATH}/job/<job_id>', _remove_job, ['DELETE']),
+    # (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE']),
     # Public URLS
+    (f'{PUBLIC_API_BASE_PATH}/{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
+    (f'{PUBLIC_API_BASE_PATH}/{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
+    (f'{PUBLIC_API_BASE_PATH}/{API_BASE_PATH}/queues/', _queues, ['GET']),
     (f'{PUBLIC_API_BASE_PATH}/state/process/<process_id>', _process_state, ['GET']),
     (f'{PUBLIC_API_BASE_PATH}/state/workflow/', _workflow_state, ['GET'])
 ]
