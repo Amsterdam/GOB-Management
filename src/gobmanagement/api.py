@@ -167,9 +167,9 @@ ROUTES = [
     # (f'{API_BASE_PATH}/job/<job_id>', _remove_job, ['DELETE']),
     # (f'{API_BASE_PATH}/queue/<queue_name>', _queue, ['DELETE']),
     # Public URLS
-    (f'{PUBLIC_API_BASE_PATH}/{API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
-    (f'{PUBLIC_API_BASE_PATH}/{API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
-    (f'{PUBLIC_API_BASE_PATH}/{API_BASE_PATH}/queues/', _queues, ['GET']),
+    (f'{PUBLIC_API_BASE_PATH}/catalogs/', _catalogs, ['GET']),
+    (f'{PUBLIC_API_BASE_PATH}/graphql/', _graphql, ['GET', 'POST']),
+    (f'{PUBLIC_API_BASE_PATH}/queues/', _queues, ['GET']),
     (f'{PUBLIC_API_BASE_PATH}/state/process/<process_id>', _process_state, ['GET']),
     (f'{PUBLIC_API_BASE_PATH}/state/workflow/', _workflow_state, ['GET'])
 ]
